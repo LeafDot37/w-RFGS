@@ -751,8 +751,9 @@ The project is released as \emph{w-RFGS}. The repository contains the
 generator, the training and evaluation code, the instance tables and the
 per-run configuration files; the rendered spectra (572{,}160 images for the
 CBF protocol, plus the MVDR and $\mathbf{w}$ variants, several GB in total) are
-distributed as a separate archive rather than committed, with a SHA-256
-checksum listed alongside it. Every generated image is reproducible from
+distributed as a separate archive under the release tag
+\texttt{datasets-v1} rather than committed, split into checksummed parts with
+a SHA-256 manifest alongside them. Every generated image is reproducible from
 Table~\ref{tab:protocol}: the public NIST lobby digital twin is traced with
 Sionna RT under the stated transmitter, receiver, material and normalization
 settings, and the instance tables fix the parameter draws. The download
