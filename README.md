@@ -93,6 +93,37 @@ beamforming weights, so the w table compares only against w-blind controls and g
 floors. It is *not* comparable to the single-transmitter table above (4×4 vs 1×1 transmit array,
 MVDR vs CBF operator, different instance set).
 
+#### The same axis under CBF (60 k steps, 36 held-out weights)
+
+| Setting | PSNR↑ | SSIM↑ | LPIPS↓ |
+|---|---|---|---|
+| w-conditioned (5-d pointing block) | 14.545 | 0.7905 | 0.3857 |
+| **w-blind (control)** | **14.578** | **0.7924** | **0.3832** |
+| Paired Δ (conditioned − blind) | −0.032 | −0.0019 | +0.0024 |
+| *Ground-truth-only floors* | | | |
+| Same-position training-w prior | 13.534 | 0.6498 | 0.2902 |
+| Sibling instance (other w) | 12.460 | 0.6946 | 0.2877 |
+
+Under CBF the two arms are statistically indistinguishable (2/36 instances favour the conditioned
+arm, gap inside the 0.365 dB repeat noise floor), yet an in-domain probe shows the model expresses
+only 0.1 % of the ground-truth variation across weights it **was trained on** (pairwise model PSNR
+52.19 dB against 22.95 dB for ground truth). The failure is therefore representational, not a
+generalization failure: a real scalar per Gaussian cannot carry the coherent complex sum over the
+16 array elements. See `paper/main.tex` §Analysis.
+
+### Test-time adaptation (diagnostic, not the deliverable)
+
+| Setting | Protocol | LPIPS↓ |
+|---|---|---|
+| Zero-shot delivery checkpoint | 53 inst. × 640 views | 0.4325 |
+| + perceptual tail (still feed-forward) | 53 inst. × 640 views | **0.3957** |
+| + 320-view adaptation (transductive) | 16 inst., disjoint 320 views | 0.3440 |
+| In-sample oracle (upper bound) | 1 inst., all 640 views | 0.2247 |
+
+The oracle uses the same head and renderer as the 0.3440 row, so the remaining gap is the cost of
+amortization rather than missing capacity. Adaptation sets must be sampled uniformly over position
+*and* orientation; prefix or strided selection flips the sign of the gain.
+
 ---
 
 ## Repository layout

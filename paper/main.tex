@@ -12,8 +12,8 @@
 \graphicspath{{figs/}}
 
 % 作者信息待填（本文件由实验结果自动生成，未预设作者身份）
-\title{Generalizing Feed-Forward Radio Radiance Fields\\
-to Unseen Transmitters in a Single Scene}
+\title{w-RFGS: Feed-Forward Radio Radiance Fields\\
+for Unseen Transmitter Parameters and Beamforming Weights}
 
 \author{%
 \IEEEauthorblockN{Author Names To Be Completed}
@@ -45,41 +45,32 @@ range so held-out values stay representable. Geometry is frozen from an optical
 are optimized over 144 transmitter instances. On a held-out position with a
 held-out orientation and a held-out carrier, the model reaches
 15.38\,dB PSNR / 0.7638 SSIM / 0.4040 LPIPS, against 14.13 / 0.7233 / 0.4457
-for the published per-scene RF-3DGS. Across 52 held-out instances, extending
-training from 60\,k to 180\,k steps improves PSNR by $0.127\pm0.021$\,dB
-(44/52 instances) while SSIM and LPIPS stay essentially flat. We then extend
-the conditioning to the \emph{beamforming weights} of an array transmitter, an
-axis on which the literature offers no baseline: there the model produces a
-measurable, non-degenerate response to unseen weights
-($2.7$--$4.2\%$ of the ground-truth effect, against exactly zero for a
-$\mathbf{w}$-blind control), while a blind control of equal budget is still
-$0.50$\,dB better---so we report the axis as representable but not yet
-realized, and show that the binding constraint is base rendering fidelity.
-We report the protocol mismatches that make the external comparisons indicative
-rather than exact, and we state which claims the current evidence does not
-support.
+for the published per-scene RF-3DGS, and it keeps its margin under a second
+imaging operator (regularized MVDR), where a constant-image floor of
+11.38\,dB leaves it $+2.83$\,dB. We then extend the conditioning to the
+\emph{beamforming weights} of a $4\times4$ array transmitter, an axis on which
+the literature offers no baseline, and report it on two operators: under CBF the
+$\mathbf{w}$-conditioned arm is statistically indistinguishable from a
+$\mathbf{w}$-blind control of equal budget, and under MVDR it is $0.50$\,dB
+worse, although a swap probe shows a live, non-degenerate response
+($2.7$--$4.2\%$ of the ground-truth effect, against exactly zero for the blind
+control). An in-domain probe localizes the failure: the model does not express
+even the weights it was trained on, so the axis is limited by representation
+and base fidelity rather than by generalization. A test-time ladder
+($0.396\rightarrow0.344\rightarrow0.225$ LPIPS) bounds what remains: the head
+and renderer can reach $0.22$, so the gap is amortization, not capacity we
+lack. We report the protocol mismatches that make the external comparisons
+indicative rather than exact, and we state which claims the current evidence
+does not support.
 \end{abstract}
 
 \begin{IEEEkeywords}
 radio radiance field, 3D Gaussian splatting, feed-forward reconstruction,
-spatial channel state information, transmitter generalization
+spatial channel state information, transmitter generalization, beamforming
 \end{IEEEkeywords}
 
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig1_pipeline.pdf}
-\caption{Overview. Geometry comes from an optical 3DGS and is frozen
-($P=1{,}014{,}142$ Gaussians). A per-point embedding, the view ray, and the
-transmitter parameters form a 156-dimensional input to a two-layer MLP that
-predicts one scalar per Gaussian; the frozen differentiable rasterizer composites
-the scalars, and a fixed jet lookup table produces the $300\times200$ spectrum.
-Only the head, the embedding and per-point opacity are trained, all of them
-across 144 transmitter instances simultaneously. Nothing is optimized at
-inference time.}
-\label{fig:pipeline}
-\end{figure*}
-
 \section{Introduction}
+\label{sec:intro}
 
 Radio radiance fields estimate spatial channel state information (S-CSI)
 densely over a volume rather than at a handful of measured points. RF-3DGS
@@ -100,17 +91,42 @@ Refitting per transmitter is expensive, and---more importantly---a site-specific
 fit gives no principled answer to the counterfactual question
 \emph{what would this room look like if the radio were aimed elsewhere?}
 
+Fig.~\ref{fig:gap} states the difference this paper is about. In the published
+workflow a radio field is a function of the scene \emph{and} of the transmitter
+configuration: a new configuration means a new optimisation, so the cost of
+serving a site grows with the number of radios. If the transmitter parameters
+enter the model as an input, the scene and the transmitter decouple: one model,
+trained once, renders any configuration in one forward pass, and the per-scene
+optimisation is paid once rather than once per radio.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig2_gap.pdf}
+\caption{Why transmitter-parameter generalization matters. (a) A per-scene radio
+radiance field is bound to the transmitter configuration: each new
+configuration $\theta_n$ requires its own optimisation, so the training cost is
+proportional to the number of transmitters to be served. (b) Conditioning the
+model on the parameters $\theta=(\mathbf{p},\alpha,\beta,f,\mathbf{w})$ decouples
+the two: one model is trained once on a set of configurations and renders any
+unseen configuration---position, orientation, carrier, and array weights---in a
+single forward pass.}
+\label{fig:gap}
+\end{figure*}
+
 \subsection{Question and scope}
 We therefore ask a narrower question than cross-scene generalization: within a
 single scene whose geometry is known, can a feed-forward model amortize the fit
 over the \emph{transmitter configuration}? Concretely, we condition on a vector
 of transmitter parameters $(\Delta\psi, \Delta\theta, f)$---boresight offsets in
 yaw and pitch, and carrier frequency---and train one model to render the AoA
-spectrum for any of them, including values never seen in training.
+spectrum for any of them, including values never seen in training. We then push
+the same idea one level up the chain, to the \emph{beamforming weights}
+$\mathbf{w}$ of an array transmitter, which are re-tuned on a millisecond scale
+and which no published radio radiance field conditions on.
 
 \subsection{Why this is not a matter of adding input dimensions}
 Three obstacles appear as soon as the problem is posed this way, and each is
-addressed in Section~\ref{sec:what}:
+addressed in Section~\ref{sec:principle}:
 \begin{enumerate}
 \item \textbf{Confounding.} If every transmitter position carries a single
 parameter set, the parameter input is redundant: the model can interpolate
@@ -120,31 +136,34 @@ $[0,1]$ before storage. This silently removes one parameter entirely and
 removes the meaning of another, so the modelled parameter vector must be chosen
 from what survives the normalization.
 \item \textbf{Representation.} Orientation changes \emph{which surfaces are
-lit}; frequency changes the coherent phase of every multipath component. A
-per-point scalar field can express the first analytically but only
-approximately the second, which sets a limit we measure rather than assume.
+lit}; frequency changes the coherent phase of every multipath component, and
+array weights change a coherent complex sum. A per-point scalar field can
+express the first analytically but only approximately the others, which sets a
+limit we measure rather than assume.
 \end{enumerate}
 
 \subsection{Contributions and findings}
 \begin{itemize}
-\item A data design (Section~\ref{sec:design}) that decouples transmitter
+\item A data design (Section~\ref{sec:data}) that decouples transmitter
 parameters from position, and a two-stage feasibility gate
 (Section~\ref{sec:gate}) that measures whether each parameter axis is
 \emph{worth} conditioning on before any large-scale generation or training
 budget is spent.
 \item A parameter encoding and a frozen-geometry feed-forward architecture
-(Section~\ref{sec:method}) whose entire transmitter-conditioned capacity is a
+(Section~\ref{sec:arch}) whose entire transmitter-conditioned capacity is a
 36.7\,k-parameter head plus a per-point embedding.
-\item Evidence that unseen-transmitter rendering works inside one scene, with
-per-axis honesty about what is and is not established
-(Section~\ref{sec:exp}): the main reading improves PSNR by 1.25\,dB over the
-published per-scene RF-3DGS, but the two were evaluated under different
-generation protocols, and we say so explicitly.
+\item Evidence that unseen-transmitter rendering works inside one scene, under
+two different imaging operators (Sections~\ref{sec:main} and~\ref{sec:mvdr}): the
+main reading improves PSNR by 1.25\,dB over the published per-scene RF-3DGS, but
+the two were evaluated under different generation protocols, and we say so
+explicitly.
 \item A first measurement, to our knowledge, of conditioning a radio radiance
-field on array beamforming weights (Section~\ref{sec:w}). We show the axis is
-physically feasible and representable, measure the response the current model
-realizes ($2.7$--$4.2\%$ of the truth), and localize the bottleneck in base
-fidelity rather than in the weight representation.
+field on array beamforming weights
+(Sections~\ref{sec:wcbf}--\ref{sec:wmvdr}). We show the axis is physically
+feasible, measure the response the current model realizes, and localize the
+bottleneck in representation and base fidelity rather than in the weight
+concept---with an in-domain probe and a test-time ladder
+(Section~\ref{sec:analysis}) that bound what remains.
 \end{itemize}
 
 \section{Related Work}
@@ -159,6 +178,8 @@ multipath component---rather than a scalar power map. GRaF \cite{graf}
 trains a generalizable radio radiance field over a set of scenes. Convolutional
 radio-map estimators such as RadioUNet \cite{radiounet} predict path loss or
 power maps from geometry without a radiance-field parameterization.
+RS--RF-3DGS and its descendants reconstruct a spectrum from the multipath
+measured under whatever transmitter the measurement campaign used.
 
 \paragraph{Coupled and cross-scene RF Gaussian splatting}
 CORF-GS \cite{corfgs} couples optical and radio appearance on shared Gaussian
@@ -167,22 +188,31 @@ two-stage (frozen-geometry) baseline. CoRF \cite{corf} separates learned
 propagation from analytic array physics and amortizes across scenes using
 unordered spectral references.
 
+\paragraph{Transmitter-parameter generalization}
+The works above amortize over \emph{scenes} or over \emph{receiver poses}; in
+every case the transmitter is a fixed part of the fitted model. Changing its
+position, its orientation, its carrier, or its precoder changes the target
+function, and the published remedy is to refit. The closest prior attempt is an
+in-house feed-forward baseline trained on one configuration per position, which
+we report as the ``prior feed-forward'' row of Table~\ref{tab:main}: it is
+amortized over transmitter \emph{positions} but not over the other parameters,
+and it is 3.5\,dB behind the present model. We are not aware of published work
+that conditions a radio radiance field on transmitter orientation and carrier,
+let alone reports held-out values on those axes.
+
 \paragraph{Array weights as a conditioning variable: an open gap}
-Every formulation above treats the transmitter as a \emph{fixed configuration},
-and RS--RF-3DGS reconstructs a spectrum from the multipath it measures under
-whatever precoder the transmitter happened to use. When the transmitter is an
-array, however, its beamforming weights $\mathbf{w}\in\mathbb{C}^{N}$ are a
-continuous, physically meaningful, and routinely re-tuned parameter: a base
-station re-aims its beam between users within milliseconds. Conditioning a
-forward model on $\mathbf{w}$ asks it to render the \emph{same} site under
-every beam the array can form. To our knowledge no published radio radiance
-field does this, so there is no external baseline for this axis---we report it
-as a gap and evaluate it with an internal control instead
-(Section~\ref{sec:w}). The closest external anchor is the single-transmitter
-setting of Table~\ref{tab:main}, and the two are only shallowly comparable: the
-array protocol uses a different transmitter ($4\times4$ instead of $1\times1$),
-a different imaging operator (MVDR instead of CBF) and a different instance
-set.
+When the transmitter is an array, its beamforming weights
+$\mathbf{w}\in\mathbb{C}^{N}$ are a continuous, physically meaningful, and
+routinely re-tuned parameter: a base station re-aims its beam between users
+within milliseconds. Conditioning a forward model on $\mathbf{w}$ asks it to
+render the \emph{same} site under every beam the array can form. To our
+knowledge no published radio radiance field does this, so there is no external
+baseline for this axis---we report it as a gap and evaluate it with internal
+controls (Sections~\ref{sec:wcbf} and~\ref{sec:wmvdr}). The closest external
+anchor is the single-transmitter setting of Table~\ref{tab:main}, and the two
+are only shallowly comparable: the array protocol uses a different transmitter
+($4\times4$ instead of $1\times1$), a denser multipath environment, and in the
+MVDR case a different imaging operator.
 
 \paragraph{Feed-forward 3D reconstruction}
 pixelSplat \cite{pixelsplat} and MVSplat \cite{mvsplat} predict 3D Gaussians
@@ -195,34 +225,103 @@ Cross-scene amortization \cite{corf} and in-scene transmitter amortization are
 orthogonal axes. This paper holds the scene fixed and varies the transmitter;
 the two could be composed, and we do not attempt that here.
 
-\section{What Can Be Conditioned On}
-\label{sec:what}
+\section{Principle}
+\label{sec:principle}
 
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{fig2_design.pdf}
-\caption{Data design. (a) Transmitter positions, train versus held out.
-(b) Realized orientation draws; shaded bands are held out, so the model is
-asked to interpolate. (c) Carrier axis with the declared band shaded, the four
-training carriers, three held-out carriers, and the carrier used for the main
-reading.}
-\label{fig:design}
-\end{figure*}
+Two representations are coupled in this paper: the optical side supplies the
+geometry, and the radio side supplies the quantity being rendered. We state
+what each contributes, because the design choices---what to freeze, what to
+condition on, and what a per-point scalar can represent---follow from the two
+models rather than from architectural taste.
 
-\subsection{Observation model and observability}
+\subsection{Optical side: 3D Gaussians as a frozen geometry carrier}
+
+A 3D Gaussian splatting scene \cite{3dgs} is a set of $P$ anisotropic
+primitives, each with a mean $\boldsymbol{\mu}_i\in\mathbb{R}^3$, a covariance
+$\Sigma_i$, an opacity $o_i$, and a view-dependent colour. Rendering projects
+each primitive to the image plane and composites front-to-back,
+\begin{equation}
+\begin{aligned}
+C(\mathbf{p})&=\sum_{i} c_i\,\alpha_i(\mathbf{p})
+\prod_{j<i}\bigl(1-\alpha_j(\mathbf{p})\bigr),\\
+\alpha_i(\mathbf{p})&=o_i\exp\!\Bigl(-\tfrac12
+\mathbf{q}_i^{\top}\widetilde\Sigma_i^{-1}\mathbf{q}_i\Bigr),
+\end{aligned}
+\end{equation}
+where $\widetilde\Sigma_i$ is the projected two-dimensional covariance and
+$\mathbf{q}_i$ the pixel offset. Two properties matter here. First, the
+composite is \emph{linear in each primitive's per-point value} $c_i$ given the
+geometry: if the colours are replaced by any other per-point scalar field, the
+same compositing machinery renders it. Second, the geometry is a property of
+the \emph{room}, not of the radio: means, covariances, rotations and spherical
+harmonics are fitted to optical appearance and do not depend on the transmitter.
+A feed-forward MVSplat-style encoder \cite{mvsplat} supplies this geometry once
+from posed images, and it can then be frozen while the radio quantity is
+learnt on top of it. That decomposition is what makes the transmitter
+amortization cheap: the scene is paid for once, and the only thing that varies
+with the transmitter is a per-point scalar.
+
+Concretely, we predict one scalar $u_i\in(0,1)$ per Gaussian and composite it
+with the same alpha blending,
+\begin{equation}
+u(\mathbf{p})=\sum_i u_i\,\alpha_i(\mathbf{p})
+\prod_{j<i}\bigl(1-\alpha_j(\mathbf{p})\bigr),
+\end{equation}
+so the radio image inherits the geometry's occlusions and parallax for free.
+The scalar is then mapped to colour only at the end through a fixed jet lookup
+table (Section~\ref{sec:arch}).
+
+\subsection{Radio side: what the transmitter does to the spectrum}
+
+A receiver at $\mathbf{p}$ with a $10\times10$ planar array observes the
+superposition of $K$ propagation paths,
+\begin{equation}
+\mathbf{x}=\sum_{k=1}^{K}\gamma_k\,g_k(\mathbf{w})\,
+\mathbf{a}_r(\boldsymbol{\theta}_k)+\mathbf{n},
+\end{equation}
+where $\gamma_k$ and $\boldsymbol{\theta}_k$ are the complex gain and the
+angle of arrival of path $k$, $\mathbf{a}_r$ is the receive array response,
+$\mathbf{n}$ is noise, and $g_k(\mathbf{w})=\mathbf{w}^{\mathsf{H}}
+\mathbf{a}_t(\boldsymbol{\phi}_k)/\sqrt{N}$ is the transmit gain toward the
+departure direction $\boldsymbol{\phi}_k$ of that path, with
+$\mathbf{w}\in\mathbb{C}^{N}$ the beamforming weights ($N=1$ for a single
+element). The AoA spectrum is an image over $(\theta,\varphi)$ produced by an
+imaging operator applied to $\mathbf{x}$. We use two:
+\begin{align}
+P_{\mathrm{CBF}}(\boldsymbol{\theta})&=\bigl|\mathbf{a}_r(\boldsymbol{\theta})^{\mathsf{H}}\mathbf{x}\bigr|^2,\\
+P_{\mathrm{MVDR}}(\boldsymbol{\theta})&=\bigl(\mathbf{a}_r(\boldsymbol{\theta})^{\mathsf{H}}
+\hat{R}^{-1}\mathbf{a}_r(\boldsymbol{\theta})\bigr)^{-1},\quad
+\hat{R}=\mathbb{E}[\mathbf{x}\mathbf{x}^{\mathsf{H}}]+\varepsilon\mathbf{I}.
+\end{align}
+This model says exactly where the transmitter enters. Its \emph{position}
+changes which paths exist and their delays; its \emph{orientation} changes both
+which surfaces are illuminated and the element gain along each departure
+direction, i.e.\ the factor $g_k$ through $\mathbf{a}_t$; its \emph{carrier}
+$f$ enters the phase $2\pi f\tau_k$ of every path, hence the coherent sum; and
+its \emph{weights} $\mathbf{w}$ scale and phase-shift the $N$ element
+contributions that combine coherently into each $g_k$.
+
+Two consequences shape the method. First, the map from transmitter parameters
+to image is not pointwise: under CBF the image is a \emph{coherent} quadratic
+form in $\mathbf{w}$, and under MVDR the weights also change $\hat{R}$ and
+therefore the adaptive weights themselves, so the operator is not linear in the
+array response. Second, a per-point \emph{real} scalar can carry a magnitude
+but not the phase of a coherent sum. For orientation that is harmless---the
+effect is a gain on which surfaces are lit, a non-negative quantity---but for
+$\mathbf{w}$ it is a structural mismatch, and Section~\ref{sec:wmvdr} measures
+the consequence rather than assuming it.
+
+\subsection{What can be conditioned on}
+\label{sec:obs}
 
 Let $\mathbf{x}_t$ be the transmitter position, $\boldsymbol{\Omega}=
 (\Delta\psi,\Delta\theta)$ its boresight orientation relative to a scene-facing
-base frame, and $f$ the carrier. For a receiver at $\mathbf{p}$ with a
-$10\times10$ planar array, the target is a $300\times200$ image
-$S(\mathbf{p};\mathbf{x}_t,\boldsymbol{\Omega},f)$ over azimuth and elevation,
-obtained by beamforming the multipath components produced by a ray tracer
-\cite{sionna,sionnart}. Two properties of this observation model constrain what
-may be modelled.
+base frame, and $f$ the carrier. Two properties of the observation model
+constrain what may be modelled.
 
 \emph{Per-image min--max normalization removes transmit power exactly.}
 The beamformed field is linear in path amplitude, so a transmit power change is a
-global multiplier on $S$; after normalizing each image to $[0,1]$, the image is
+global multiplier on $P$; after normalizing each image to $[0,1]$, the image is
 bit-identical. Power is therefore not a weak or noisy parameter---it is
 \emph{unobservable}, and we exclude it rather than fit a coefficient that the
 data cannot constrain.
@@ -233,15 +332,96 @@ tested on the other, but ``an unseen value'' of a two-valued parameter is not a
 meaningful generalization target, so we exclude it as well.
 
 What remains is a three-dimensional continuous vector
-$(\Delta\psi,\Delta\theta,f)$, all of whose axes admit held-out values.
+$(\Delta\psi,\Delta\theta,f)$, all of whose axes admit held-out values, plus
+$\mathbf{w}$ for the array transmitter. The same normalization also hides part
+of $\mathbf{w}$: a beamforming weight scales the transmit power by 17--27\,dB
+relative to a uniform precoder (median $+18.6$\,dB), and the normalization
+removes that gain completely, so $\mathbf{w}$ is observable only through the
+\emph{spatial shape} it imprints. Array-gain metrics are therefore out of reach
+without storing per-image $v_{\min}/v_{\max}$, and we report none.
 
-\subsection{Breaking the parameter--position confound}
-\label{sec:design}
+\subsection{Why a scalar field rather than a colour field}
 
+The target is a physical intensity. Predicting one scalar and mapping it to
+colour through a fixed lookup table constrains the output to the
+one-dimensional manifold of realizable spectra instead of letting the network
+spend capacity on reproducing the colormap, and it makes the learned quantity
+interpretable. In this codebase the constrained parameterization was
+consistently stronger than per-point spherical harmonics or an unconstrained
+colour MLP on the same geometry; we adopt it as a design choice and do not
+claim it as a contribution of this paper.
+
+\section{Method}
+\label{sec:method}
+
+The method has three parts: how the dataset is built (Section~\ref{sec:data}),
+what the dataset can and cannot establish (Section~\ref{sec:standing}), and the
+model and experiment protocol trained on it
+(Sections~\ref{sec:arch}--\ref{sec:expsetup}).
+
+\subsection{Dataset construction}
+\label{sec:data}
+
+\paragraph{Scene and generator}
+The site is the public NIST lobby digital twin ($\approx14\times15$\,m$^2$)
+distributed with the RF-3DGS codebase, together with its 3{,}200 posed optical
+views (2{,}560 train / 640 test), which we keep unchanged so that every method
+is scored on the same camera set. Propagation is traced with Sionna RT
+\cite{sionna,sionnart}. Each solve produces the multipath components at a
+$10\times10$ receive array, and the AoA image is formed by the operator under
+study. Table~\ref{tab:protocol} lists the settings; the two marked entries are
+load-bearing and easy to get wrong.
+
+\begin{table}[!t]
+\centering
+\caption{Generation protocol. Both marked rows are protocol requirements, not
+preferences: with an isotropic radiator the orientation axis is vacuous, and
+with the material callback active the carrier changes the material as well as
+the propagation.}
+\label{tab:protocol}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}l@{\hspace{4pt}}l@{}}
+\toprule
+Scene & NIST lobby digital twin ($\approx14\times15$\,m$^2$) \\
+Optical & Blender renders, 3{,}200 posed views (2{,}560/640) \\
+Image & $300\times200$, $90^\circ$ FoV, 8-bit, per-image min--max \\
+Receiver & $10\times10$ planar array, TR\,38.901 pattern \\
+Transmitter & $1\times1$ TR\,38.901 element;\ \ $4\times4$ for $\mathbf{w}$ \\
+Propagation & Sionna RT, max depth 1, specular only (CBF) \\
+ & diffuse on, $\approx1.6\times10^{5}$ paths (MVDR) \\
+Materials & tutorial values at 60\,GHz, callback frozen \\
+Carrier & declared $[2.0,4.5]$\,GHz \\
+TX positions & 36 train / 13 held out (of 49) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The transmitter must not be isotropic.} With an isotropic radiator,
+rotating the transmitter leaves the image bit-identical and the entire
+orientation axis is vacuous. We use a TR\,38.901 element \cite{tr38901} with a
+$65^\circ$ azimuth beamwidth.
+
+\emph{The material frequency callback must be frozen.} Sionna's material
+objects carry a frequency-update callback that silently restores the ITU
+conductivity model when the scene frequency is set. Left in place, changing the
+carrier would change \emph{both} propagation and material, and the frequency
+axis would not be attributable. We freeze the callback after loading the scene
+at 60\,GHz and verify the freeze with a round-trip probe (Section~\ref{sec:gate}).
+
+For the array protocol the transmit array is $4\times4$ with
+$y=[-0.75,-0.25,0.25,0.75]$ and $z=[0.75,0.25,-0.25,-0.75]$, and the weights are
+drawn from a codebook of pointing directions
+$w_n\!\propto\!\exp\{-j2\pi(y_n\sin\theta\sin\varphi+z_n\cos\theta)\}/\sqrt{N}$
+with 37 training and 21 held-out $(\theta,\varphi)$ labels. The $4\times4$ array
+multiplies the multipath count per receiver from $1.59\times10^{5}$ to
+$6.35\times10^{5}$, which is why the array protocol is generated and trained at
+640 views per instance rather than 3{,}200.
+
+\paragraph{Breaking the parameter--position confound}
 The natural way to build such a dataset---one transmitter per position---makes
 the parameter input redundant. We instead use a randomized complete block
-design (Fig.~\ref{fig:design}): each of 36 training positions receives $n=4$
-independent draws of
+design: each of 36 training positions receives $n=4$ independent draws of
 $(\Delta\psi,\Delta\theta,f)$ from the training domain, giving 144 instances.
 Because parameters are drawn independently of position, a position-conditioned
 model cannot explain the training data without using the parameter input. We
@@ -255,76 +435,113 @@ $\{-32,0,32\}^\circ$; pitch offsets $\{-20,-7,7,20\}^\circ$ with held-out
 $\{-13.5,0,13.5\}^\circ$; carriers $\{2.1,2.6,3.1,3.6\}$\,GHz with held-out
 $\{2.35,2.85,3.35\}$\,GHz inside a declared range of $[2.0,4.5]$\,GHz.
 Interpolation measures whether the model represents the parameter, not whether
-it dares extrapolate.
+it dares extrapolate. For $\mathbf{w}$ the held-out labels are the 21 codebook
+directions excluded from training, and for CBF we also add 144
+same-configuration sibling pairs (identical position and transmitter
+parameters, different $\mathbf{w}$) so that the array protocol contains two
+renderings of each training configuration under different beams.
 
-\subsection{Encoding}
-\label{sec:enc}
+Table~\ref{tab:instances} lists the resulting blocks. Every block is generated
+at 300$\times$200 and 8 bits, and all of them are used in this paper.
 
-\emph{Orientation must be encoded twice.} A circular quantity cannot be fed as
-a raw angle: the input would jump at the $0/2\pi$ seam. We encode
-$(\sin\Delta\psi,\cos\Delta\psi,\sin\Delta\theta,\cos\Delta\theta)$, and
-additionally feed the per-point direction expressed in the transmitter frame,
-\begin{equation}
-\mathbf{u}_i = R^{\top}\,\widehat{\Delta}_i,\qquad
-\widehat{\Delta}_i=\frac{\mathbf{x}_i-\mathbf{x}_t}{\|\mathbf{x}_i-\mathbf{x}_t\|},
-\end{equation}
-where $R$ is the TR\,38.901 \cite{tr38901} rotation of the transmitter. The
-element gain of a directional antenna depends on the angle between the ray and
-the boresight \emph{in the antenna frame}; $\mathbf{u}_i$ is the only per-point
-quantity that carries this dependence, and it is the term that lets a per-point
-scalar field express ``which surfaces are illuminated.''
+\begin{table}[!t]
+\centering
+\caption{Dataset blocks. ``Views'' is the number of test camera views stored
+per instance; instances of role \emph{train} are stored on both the train and
+test camera splits. Images are $300\times200$ 8-bit AoA spectra in the
+operator's native u-domain; the CBF and MVDR blocks differ in the imaging
+operator, not in the instance table.}
+\label{tab:instances}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}l@{\hspace{3pt}}lrrr@{}}
+\toprule
+Dataset & Role & Inst. & Views & Images \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{CBF, $1\times1$ element}}\\
+ & train (\emph{4 draws/pos.}) & 144 & 3{,}200 & 460{,}800 \\
+ & held-out position & 52 & 640 & 33{,}280 \\
+ & held-out orientation & 36 & 640 & 23{,}040 \\
+ & held-out elevation & 36 & 640 & 23{,}040 \\
+ & held-out carrier & 36 & 640 & 23{,}040 \\
+ & joint hold-out & 13 & 640 & 8{,}320 \\
+ & main reading & 1 & 640 & 640 \\
+ & \emph{total} & 318 & & 572{,}160 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{MVDR, $1\times1$ element (same instances)}}\\
+ & all roles & 318 & & 572{,}160 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Array, $4\times4$ element}}\\
+MVDR & base + held-out $\mathbf{w}$ & 354 & 640 & 226{,}560 \\
+CBF & base + held-out $\mathbf{w}$ & 354 & 640 & 226{,}560 \\
+CBF & $+$ sibling-weight pairs & 144 & 640 & 92{,}160 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\emph{Frequency must be normalized over the declared range.} The carrier enters
-through the phase $2\pi f\tau_k$ of each path $k$. We feed
-$\tilde f = 2(f-f_{\mathrm{lo}})/(f_{\mathrm{hi}}-f_{\mathrm{lo}})-1$ using the
-\emph{declared} band $[f_{\mathrm{lo}},f_{\mathrm{hi}}]$, not the observed one,
-so that held-out carriers map to interior values of the input rather than
-requiring extrapolation, and we do not clip.
+\subsection{What the dataset is, and what it is not}
+\label{sec:standing}
 
-\subsection{Why a scalar field rather than a colour field}
+We are explicit about the standing of this data, because the claims depend on
+it.
 
-The target is a physical intensity. We predict one scalar $u_i\in(0,1)$ per
-Gaussian and map it to colour only at render time through a fixed jet lookup
-table. This constrains the output to the one-dimensional manifold of realizable
-spectra instead of letting the network spend capacity on reproducing the
-colormap, and it makes the learned quantity interpretable. In this codebase the
-constrained parameterization was consistently stronger than per-point spherical
-harmonics or an unconstrained colour MLP on the same geometry; we adopt it as a
-design choice and do not claim it as a contribution of this paper.
+\emph{The scene is public and reused; the protocol is ours.} The digital twin,
+the optical renders and the camera poses come from the RF-3DGS distribution and
+are the same assets its tutorial uses, so the receiver geometry and the image
+domain are not ours to redefine. The transmitter-side protocol---the
+TR\,38.901 element, the parameter draws, the held-out bands, the array
+codebook---was built for this paper. There is no community benchmark for
+transmitter-parameter generalization in radio radiance fields, which is itself
+part of why we release the generator, the instance tables and the images
+(Section~\ref{sec:avail}).
 
-\section{Method}
-\label{sec:method}
+\emph{It is simulated, single-scene, and single-transmitter.} Every image is
+traced, not measured. Nothing in the data supports a claim about a new room, a
+measured campaign, or two simultaneous transmitters; Section~\ref{sec:disc}
+states the consequences and Section~\ref{sec:future} what would close them.
 
-Fig.~\ref{fig:pipeline} summarizes the architecture; the rest of this section
-details each block.
+\emph{Its resolution is high but its view budget is not uniform.} The
+single-element blocks carry 3{,}200 views for training instances and 640 for the
+rest; the array blocks carry 640 for every instance, because the $4\times4$
+array quadruples the multipath count. The array protocol therefore generalizes
+over \emph{parameters} at a fixed, smaller view budget, and its numbers are not
+comparable with the single-element numbers.
 
-\subsection{Frozen optical geometry}
+\emph{Its normalization hides one quantity by construction.} As
+Section~\ref{sec:obs} states, per-image min--max removes transmit power exactly
+and array gain approximately. We do not store per-image scale factors, so any
+metric that depends on absolute received power is out of reach on this data.
+This is a limitation of the observation model, not of the implementation.
 
+\subsection{Model}
+\label{sec:arch}
+
+\paragraph{Frozen geometry}
 The scene provides an optical 3DGS checkpoint fitted to 2{,}560 posed RGB
 views. We freeze all geometric and photometric per-point attributes---means,
 covariances, rotations and spherical harmonics---and disable densification.
 Only three tensors are optimized: a per-point embedding
 $e_i\in\mathbb{R}^{32}$ ($32.45$\,M values), per-point opacity
-($1.01$\,M values), and the head ($36.7$\,k). The amortization is thus over
-\emph{transmitters}, not over scenes: each scene still requires its own
-optimization, but that optimization is shared by all transmitters in it.
+($1.01$\,M values), and the head ($36.7$\,k, or $37.4$\,k with the weight
+block). The amortization is thus over \emph{transmitters}, not over scenes:
+each scene still requires its own optimization, but that optimization is shared
+by all transmitters in it.
 
-\subsection{Transmitter-conditioned scalar head}
-
-Table~\ref{tab:inputs} lists the input blocks. The design follows
-Section~\ref{sec:enc}; the position blocks are split into a relative part and an
-absolute part because they play different roles: $\Delta_i$ and its normalized
-form are the quantities that make an \emph{unseen} position extrapolable, while
-the absolute $\mathbf{x}_t$ lets the head learn context classes
-(near-wall, centre, corridor).
+\paragraph{Transmitter-conditioned scalar head}
+Table~\ref{tab:inputs} lists the input blocks. The position blocks are split
+into a relative part and an absolute part because they play different roles:
+$\Delta_i$ and its normalized form are the quantities that make an
+\emph{unseen} position extrapolable, while the absolute $\mathbf{x}_t$ lets the
+head learn context classes (near-wall, centre, corridor).
 
 \begin{table}[!t]
 \centering
-\caption{Input of the scalar head, per Gaussian $i$ (156 dimensions).}
+\caption{Input of the scalar head, per Gaussian $i$: 156 dimensions, plus the
+5-dimensional weight block in the array arms (161).}
 \label{tab:inputs}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.55cm}r@{}}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.35cm}r@{}}
 \toprule
 Block & Content & Dim \\
 \midrule
@@ -338,35 +555,98 @@ $|\mathbf{x}_t|$, $\sin/\cos$ az, el, $\log(1+|\mathbf{x}_t|)$ & 33 \\
 Orientation & $\sin/\cos\Delta\psi$, $\sin/\cos\Delta\theta$ & 4 \\
 Local dir. & $R^{\top}\widehat{\Delta}_i$ & 3 \\
 Carrier & $\tilde f$ & 1 \\
+Array weight & $\sin/\cos\theta_w$, $\sin/\cos\varphi_w$, $1$ & 5 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 $\gamma_L$ is the Fourier feature of $L$ octaves, $r_i$ the camera-relative
 distance, $\widehat{\cdot}$ the scene normalization $(x-c)/s$ with scene scale
-$s=8.44$, and $\mathbf{d}_i$ the view ray. The head is $\mathrm{Linear}(156,128)$--ReLU--$\mathrm{Linear}(128,128)$
---ReLU--$\mathrm{Linear}(128,1)$ followed by a sigmoid. Its last layer is
-zero-initialized with bias $\mathrm{logit}(0.05)$, so at step zero every
-Gaussian carries the same scalar and the model starts from a constant image---a
-cold start that makes the first optimization steps comparable across arms.
+$s=8.44$, and $\mathbf{d}_i$ the view ray. The head is
+$\mathrm{Linear}(d,128)$--ReLU--$\mathrm{Linear}(128,128)$--ReLU--
+$\mathrm{Linear}(128,1)$ followed by a sigmoid, with $d=156$ or $161$. Its last
+layer is zero-initialized with bias $\mathrm{logit}(0.05)$, so at step zero
+every Gaussian carries the same scalar and the model starts from a constant
+image---a cold start that makes the first optimization steps comparable across
+arms.
 
-\subsection{Rendering and objective}
+\paragraph{Encoding}
+\emph{Orientation must be encoded twice.} A circular quantity cannot be fed as
+a raw angle: the input would jump at the $0/2\pi$ seam. We encode
+$(\sin\Delta\psi,\cos\Delta\psi,\sin\Delta\theta,\cos\Delta\theta)$, and
+additionally feed the per-point direction expressed in the transmitter frame,
+\begin{equation}
+\mathbf{u}_i = R^{\top}\,\widehat{\Delta}_i,\qquad
+\widehat{\Delta}_i=\frac{\mathbf{x}_i-\mathbf{x}_t}{\|\mathbf{x}_i-\mathbf{x}_t\|},
+\end{equation}
+where $R$ is the TR\,38.901 rotation of the transmitter. The element gain of a
+directional antenna depends on the angle between the ray and the boresight
+\emph{in the antenna frame}; $\mathbf{u}_i$ is the only per-point quantity that
+carries this dependence, and it is the term that lets a per-point scalar field
+express ``which surfaces are illuminated.''
 
+\emph{Frequency must be normalized over the declared range.} The carrier enters
+through the phase $2\pi f\tau_k$ of each path $k$. We feed
+$\tilde f = 2(f-f_{\mathrm{lo}})/(f_{\mathrm{hi}}-f_{\mathrm{lo}})-1$ using the
+\emph{declared} band $[f_{\mathrm{lo}},f_{\mathrm{hi}}]$, not the observed one,
+so that held-out carriers map to interior values of the input rather than
+requiring extrapolation, and we do not clip.
+
+\emph{Weights enter by direction, not by gain.} The weight block supplies only
+the beam pointing direction in the transmitter frame, not the per-element gain
+$g_k(\mathbf{w})$ that the closed form would give. Feeding $g_k$ would ask the
+head to reproduce an analytic solution instead of testing whether the field
+itself can express the beam response. For the MVDR arms we additionally test an
+output-side representation, a rank-2 complex quadratic form
+$u_i=\sigma\bigl(a_i+\mathbf{w}^{\mathsf{H}}C_i\mathbf{w}\bigr)$, which can in
+principle represent the coherent term of the radio model.
+
+\paragraph{Rendering and objective}
 The scalar is replicated to three channels and composited by the frozen
 differentiable rasterizer using the dataset's pinhole camera (focal length 150
 pixels for a $300\times200$ image, $90^\circ$ field of view). The composite is
 quantized to 8 bits and mapped through the fixed jet lookup table. The
 objective is an $L_1$ loss between the rendered and target colour-mapped
 images, back-propagated through the rasterizer to $e_i$, opacity, and the head.
-Geometry never receives gradient.
+Geometry never receives gradient. LPIPS \cite{lpips} is available as an optional
+perceptual term whose weight is set against its measured equal-point, because
+under the sign-based optimizer the weight is a threshold rather than a ratio.
 
-\subsection{Training}
+\subsection{Experiment construction}
+\label{sec:expsetup}
 
-We train for 180\,k iterations with two views per step, sampling uniformly over
-the 144 training instances. Adam is used with a cosine schedule on the head
-($8\times10^{-3}\rightarrow8\times10^{-5}$) and a constant
-$2.5\times10^{-3}$ on the embedding. A 60\,k-step run from the same
-initialization serves as the budget reference.
+The experimental direction is deliberately monotone: \emph{keep the
+feed-forward character unchanged and add one parameter axis at a time}, so that
+any change in the numbers is attributable to the axis and not to a change of
+mechanism. Concretely, the geometry, the head width, the optimizer, the loss
+and the budget are held fixed across arms, and only the input block (or the
+control switch) changes. The axes are ordered by cost: position, then
+orientation and carrier (single-element transmitter, 180\,k steps), then array
+weights (4$\times$4 transmitter, 60\,k steps).
+
+\emph{Arm ladder.} Every axis is evaluated against three kinds of references:
+(i) a \emph{constant-image floor}, the per-view mean of the training ground
+truth, which is the strongest predictor that uses no transmitter information at
+all; (ii) a \emph{blind control} with identical data, head and budget that does
+not receive the axis in question; and (iii) \emph{ground-truth-only priors}
+built from the training set (same-position training-weight mean, sibling
+instance under another weight), which are not models but bound what ignoring
+the axis can achieve.
+
+\emph{Budgets.} Single-element arms run 180\,k iterations with two views per
+step, sampled uniformly over the 144 training instances, with a 60\,k run from
+the same initialization as the budget reference. Array arms run 60\,k steps
+because the array data has 640 views per instance: the generalization axis there
+is the parameter, not the view, so training and test views coincide and the
+held-out split is over weights.
+
+\emph{Metrics.} We report PSNR, SSIM \cite{ssim} and LPIPS \cite{lpips} together
+everywhere, in the jet delivery domain, averaged per instance and then over
+instances. Two conventions are load-bearing: 0.2\,\% of the test views have an
+all-zero ground-truth field and are skipped, since they would otherwise
+contribute a degenerate image and dominate the average; and a repeat run with
+identical inputs moves a reading by $0.365$\,dB, which is the resolution
+against which we read differences.
 
 \subsection{Feasibility gates before spending compute}
 \label{sec:gate}
@@ -389,8 +669,7 @@ learnable over the whole declared band.}
 \emph{Controls.} Re-running the identical solve reproduces the image to within
 one 8-bit level on $1.0\times10^{-7}$ of pixels, and setting the carrier to
 4.5\,GHz and back reproduces the 2.4\,GHz image equally exactly---confirming
-both solver determinism and that the material model is genuinely frozen
-(Section~\ref{sec:protocol} explains why the latter is not automatic). A
+both solver determinism and that the material model is genuinely frozen. A
 spatially permuted image, which destroys all structure while preserving the
 histogram, scores 15.34\,dB PSNR; this is our reference for ``the parameter has
 erased the image.''
@@ -407,59 +686,41 @@ $\Delta f=2.1$\,GHz, never crossing the floor$-3$\,dB threshold. The correlation
 width therefore exceeds the entire declared band, and the frequency axis was
 kept.
 
-\section{Experiments}
-\label{sec:exp}
+\emph{Weights} were gated on the array protocol before training: swapping
+$\mathbf{w}$ for a uniform precoder moves the image by a median of $17.41$\,dB
+($p_{10}=15.10$); an approximation that keeps only per-path real gains
+reproduces the exact image to $29.52$\,dB ($p_{10}=24.55$, worst $18.09$); and
+the image difference is low-pass in beam angle---$26.09$\,dB at $5$--$10^\circ$
+separation, saturating at $16.29$\,dB beyond $80^\circ$ against a
+pixel-permutation floor of $13.10$\,dB. The axis is therefore real, and the
+angular scale to resolve ($10$--$20^\circ$) is coarse.
 
-\subsection{Data and protocol}
-\label{sec:protocol}
+\section{Results}
+\label{sec:results}
 
-\begin{table}[!t]
-\centering
-\caption{Protocol and dataset.}
-\label{tab:protocol}
-\small
-\begin{tabular}{@{}ll@{}}
-\toprule
-Scene & NIST lobby digital twin ($\approx14\times15$\,m$^2$) \\
-Optical & Blender renders, 3{,}200 posed views (2{,}560/640) \\
-Image & $300\times200$, $90^\circ$ FoV, 8-bit, per-image min--max \\
-Receiver & $10\times10$ planar array, TR\,38.901 pattern \\
-Transmitter & $1\times1$ TR\,38.901, vertical polarization \\
-Propagation & Sionna RT, max depth 1, specular only \\
-Materials & tutorial values at 60\,GHz, frequency callback frozen \\
-Carrier & declared $[2.0,4.5]$\,GHz \\
-TX positions & 36 train / 13 held out \\
-Instances & 36$\times$4 train, 13$\times$4 held out, $+122$ probe \\
-Images & 572{,}160 \\
-\bottomrule
-\end{tabular}
-\end{table}
+We report four blocks: the single-element transmitter under each of the two
+imaging operators (Sections~\ref{sec:main}--\ref{sec:mvdr}), and the
+$4\times4$ array transmitter with beamforming weights under the same two
+operators (Sections~\ref{sec:wcbf}--\ref{sec:wmvdr}). Absolute numbers are
+comparable only within a block; Section~\ref{sec:cross} states what may be
+compared across blocks.
 
-Table~\ref{tab:protocol} summarizes the protocol. Two details matter for
-reproducibility. First, the transmitter was changed from an isotropic radiator
-to a TR\,38.901 element with a $65^\circ$ azimuth beamwidth: with an isotropic
-antenna, rotating the transmitter leaves the image unchanged and the entire
-orientation axis is vacuous. Second, Sionna's material objects carry a
-frequency-update callback that silently restores the ITU conductivity model when
-the scene frequency is set; left in place, changing the carrier would change
-\emph{both} propagation and material, and the frequency axis would not be
-attributable. We freeze the callback after loading the scene and verify the
-freeze with the round-trip probe above.
-
-\subsection{Main reading: unseen position, unseen orientation, unseen carrier}
+\subsection{Single transmitter, CBF: main reading}
+\label{sec:main}
 
 The main reading is a transmitter at a held-out position, with zero boresight
 offset and a 2.40\,GHz carrier. Neither the position nor the orientation value
 nor the carrier appears in the training set: $2.40$\,GHz lies in neither the
 training set $\{2.1,2.6,3.1,3.6\}$ nor the designated held-out band. It is
-scored on the 640 test views shared by all methods, with PSNR, SSIM
-\cite{ssim} and LPIPS \cite{lpips}; we treat LPIPS as the perceptual score of
-record and report all three everywhere.
+scored on the 640 test views shared by all methods.
 
 \begin{table}[!t]
 \centering
-\caption{Main reading (640 test views). ``Legacy'' marks rows measured under
-the previous generation protocol (isotropic transmitter); see the text.}
+\caption{Main reading (640 test views): unseen position, unseen boresight,
+unseen carrier. ``Legacy'' marks rows measured under the previous generation
+protocol (isotropic transmitter); the text bounds that mismatch. The floor uses
+no transmitter information; the last two rows are the same feed-forward model at
+two budgets.}
 \label{tab:main}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -513,7 +774,8 @@ SSIM rises from $0.466$ to $0.764$ and LPIPS falls from $0.433$ to $0.404$. The
 perceptual and structural gains are much larger than the PSNR gain, and we
 regard the PSNR margin over the constant image as the weaker evidence.
 
-\subsection{Held-out positions}
+\subsection{Single transmitter, CBF: held-out positions}
+\label{sec:holdout}
 
 The second reading isolates position generalization: 52 instances generated from
 13 held-out positions, four parameter draws each, all parameters inside the
@@ -557,8 +819,7 @@ We report this rather than only the PSNR gain: at this scale of difference the
 three metrics do not move together, and the honest summary is that the budget
 is spent on spectral accuracy in the PSNR sense.
 
-\subsection{Qualitative comparison}
-
+\paragraph{Qualitative comparison}
 Fig.~\ref{fig:qual} places ground truth, the released RF-3DGS render and ours on
 four test views. The most visible difference is not peak localization---all
 methods place the dominant lobe---but the low-contrast background structure,
@@ -567,33 +828,34 @@ which the per-scene baseline smooths out.
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig4_qual.png}
-\caption{Qualitative comparison on the main reading (instance 317). Columns:
-ground truth, released RF-3DGS render (legacy protocol, included as a visual
-reference), and our feed-forward render. Jets are the dataset's fixed colour
-map; brightness is not comparable across rows.}
+\caption{Single-element transmitter, CBF, qualitative (main reading, instance
+317). Columns: ground truth, released RF-3DGS render (legacy protocol, included
+as a visual reference), and our feed-forward render. Jets are the dataset's
+fixed colour map; brightness is not comparable across rows.}
 \label{fig:qual}
 \end{figure*}
 
-\subsection{Second channel model: regularized MVDR}
+\subsection{Single transmitter, MVDR}
 \label{sec:mvdr}
 
 The protocol above renders a conventional beamforming (CBF) spectrum from a
 handful of specular paths. To test whether the conditioning mechanism is tied to
 that particular imaging operator, we regenerated the same 318 transmitter
-instances with regularized MVDR (Capon) beamforming:
-$p=1/|\mathbf{a}^{H}R^{-1}\mathbf{a}|$ with $R$ the array covariance, diagonal
-loading $\varepsilon=0.01$ for well-posedness, a $0.1$\,ns delay grid, and
-diffuse scattering enabled---about $1.6\times10^{5}$ multipath components per
-solve instead of roughly six. MVDR is not linear in the array response:
-changing the transmitter configuration changes $R$ itself and therefore the
-adaptive weights, so the field-to-image map is appreciably more nonlinear than
-that of CBF. Training used the same 144 instances, the same frozen optical
-geometry and the same 180\,k schedule as the main run.
+instances with regularized MVDR (Capon) beamforming: diagonal loading
+$\varepsilon=0.01$ for well-posedness, a $0.1$\,ns delay grid, and diffuse
+scattering enabled---about $1.6\times10^{5}$ multipath components per solve
+instead of roughly six. MVDR is not linear in the array response: changing the
+transmitter configuration changes $\hat{R}$ itself and therefore the adaptive
+weights, so the field-to-image map is appreciably more nonlinear than that of
+CBF. Training used the same 144 instances, the same frozen optical geometry and
+the same 180\,k schedule as the main run.
 
 \begin{table}[!t]
 \centering
-\caption{Regularized MVDR channel model (second imaging operator). The floor row
-is measured on the main reading's ground truth only.}
+\caption{Regularized MVDR: the same 318 instances and the same model as
+Table~\ref{tab:main}, under a second imaging operator. The floor is measured on
+the main reading's ground truth only. MVDR numbers are not comparable with CBF
+numbers; the margin over the floor is.}
 \label{tab:mvdr}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -617,6 +879,17 @@ against Table~\ref{tab:main}.}
 \label{fig:mvdr}
 \end{figure}
 
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig10_qual_mvdr.png}
+\caption{Single-element transmitter, MVDR, qualitative. Rows are four test
+views at the main reading; columns are ground truth, the released RF-3DGS
+render under MVDR, and ours. The released render is included as a visual
+reference only: it was fitted to the same scene under the legacy protocol, and
+its protocol differs from the row above it.}
+\label{fig:qualmvdr}
+\end{figure*}
+
 Three things change when the imaging operator changes. First, the absolute
 numbers are not comparable with Table~\ref{tab:main}: under MVDR the
 constant-image floor itself falls to $11.38$\,dB / $0.411$ / $0.506$, i.e.\ the
@@ -633,65 +906,39 @@ bound that reading: this arm has no 60\,k baseline and no external reference, an
 the CBF-format references in Table~\ref{tab:main} are on a different axis and are
 deliberately not reproduced here.
 
-\section{Array-Level Conditioning: Beamforming Weights $\mathbf{w}$}
-\label{sec:w}
+\subsection{Array transmitter with weights, CBF}
+\label{sec:wcbf}
 
-The transmitter parameters above are properties of a single antenna element.
-We now push the same mechanism one level down---or rather up---the chain, and
-condition the model on the \emph{beamforming weights} of an array transmitter.
-This is the axis on which the literature is silent
-(Section~\ref{sec:rel}): a site is usually served by an array whose precoder is
-recomputed continuously, and no published radiance field renders the spectrum
-for arbitrary $\mathbf{w}$.
-
-\subsection{Protocol and what the normalization hides}
-
-We regenerate the scene with a $4\times4$ TR\,38.901 transmit array and the
-regularized MVDR operator of Section~\ref{sec:mvdr}, giving 354 instances. The
-model is trained on the base instances and evaluated on 36 derived instances
-(ids 318--353) whose weights never appear in training, each with 640 test
-views; all metrics are in the jet delivery domain.
-
-One property of the observation model bounds what can be claimed.
-Each image is min--max normalized, while a beamforming weight scales the
-transmit power by 17--27\,dB relative to a uniform precoder (median $+18.6$\,dB
-under MVDR). The normalization removes that gain completely, so $\mathbf{w}$ is
-observable only through the \emph{spatial shape} it imprints. Array-gain
-metrics are therefore out of reach without storing per-image
-$v_{\min}/v_{\max}$, and we report none.
-
-\subsection{Feasibility of the axis}
-
-Probes on this protocol confirm the axis is real and, importantly, learnable:
-swapping $\mathbf{w}$ for a uniform precoder moves the image by a median of
-$17.41$\,dB ($p_{10}=15.10$), an approximation using only per-path real gains
-reproduces the exact image to $29.52$\,dB ($p_{10}=24.55$, worst $18.09$), and
-the image difference is low-pass in beam angle---$26.09$\,dB at $5$--$10^\circ$
-separation, saturating at $16.29$\,dB beyond $80^\circ$ against a
-pixel-permutation floor of $13.10$\,dB. A per-point scalar field can therefore
-carry the effect, and the angular scale to resolve ($10$--$20^\circ$) is coarse.
-
-\subsection{Three arms}
-
-We compare two ways of injecting $\mathbf{w}$ with a control that does not see
-it at all (Table~\ref{tab:w}, Fig.~\ref{fig:w}). All three share the frozen
-geometry, the schedule and every hyperparameter.
+The parameters above are properties of a single antenna element. We now
+condition on the \emph{beamforming weights} of a $4\times4$ array transmitter,
+on the same 354 instances and the same 640 test views per instance, first under
+CBF. Two arms share everything except the switch that feeds the 5-dimensional
+weight block: the \emph{$\mathbf{w}$-conditioned} arm (161 inputs, 37.4\,k head
+parameters) and the \emph{$\mathbf{w}$-blind} control (156 inputs, 36.7\,k),
+which is exactly the model of Section~\ref{sec:main} applied to this data. Both
+run 60\,k steps. The blind arm is the right control here because it bounds what
+can be achieved by ignoring $\mathbf{w}$ entirely, with no capacity penalty in
+the comparison.
 
 \begin{table}[!t]
 \centering
-\caption{Beamforming-weight conditioning on 36 held-out $\mathbf{w}$
-(640 test views each). The bottom block is computed from ground truth only and
-is not a model: it bounds what ``ignoring $\mathbf{w}$'' can achieve.}
-\label{tab:w}
+\caption{Array transmitter, CBF, on the 36 held-out weights (640 test views
+each, 60\,k steps). The blind row is the same model, data and budget without the
+weight block. $\Delta$ is conditioned minus blind, paired per instance; a
+positive $\Delta$PSNR would be a win. The last two rows are not models: they
+are computed from ground truth only and bound what ignoring $\mathbf{w}$ can
+reach.}
+\label{tab:wcbf}
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Setting & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ \\
 \midrule
-Complex $\mathbf{w}$, $\lambda_p=0$ & 11.557 & 0.7020 & 0.4627 \\
-Complex $\mathbf{w}$, $+\mathcal{L}_{\mathrm{LPIPS}}$ & 11.712 & 0.6871 & 0.4621 \\
-\textbf{w-blind (control)} & \textbf{12.209} & \textbf{0.6894} & \textbf{0.4455} \\
+$\mathbf{w}$-conditioned & 14.545 & 0.7905 & 0.3857 \\
+$\mathbf{w}$-blind (control) & \textbf{14.578} & \textbf{0.7924} & \textbf{0.3832} \\
+$\Delta$ (paired, 36 inst.) & $-0.032$ & $-0.0019$ & $+0.0024$ \\
+Wins & 2/36 & -- & -- \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Reference floors from ground truth only}}\\
 Same-position training-$\mathbf{w}$ prior & 13.534 & 0.6498 & 0.2902 \\
@@ -703,16 +950,96 @@ Same-position median & 12.723 & 0.6943 & 0.2959 \\
 
 \begin{figure}[!t]
 \centering
+\includegraphics[width=\columnwidth]{fig9_w_cbf.pdf}
+\caption{Array transmitter, CBF, on the 36 held-out weights. The two bars in
+each panel differ only by whether the weight block is fed to an otherwise
+identical model. Bars are plotted on a truncated axis: the gap is
+$-0.03$\,dB PSNR, well inside the $0.365$\,dB repeat noise floor, while the
+absolute level sits above every ground-truth-only floor in
+Table~\ref{tab:wcbf}.}
+\label{fig:wcbf}
+\end{figure}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.86\textwidth]{fig11_qual_w_cbf.png}
+\caption{Array transmitter, CBF, qualitative. Rows are three held-out-weight
+instances (331, 333, 349) at the same test view; columns are ground truth, the
+$\mathbf{w}$-conditioned arm and the $\mathbf{w}$-blind control. The two
+renders are visually indistinguishable, which is the point of
+Table~\ref{tab:wcbf}: the conditioned model does not carry the weight into the
+image at a resolvable level.}
+\label{fig:qualwcbf}
+\end{figure*}
+
+\begin{figure}[!t]
+\centering
 \includegraphics[width=\columnwidth]{fig8_w_channel.pdf}
-\caption{Array-weight conditioning. (a) RMS change of the rendered image when
-the instance's $\mathbf{w}$ is replaced by a same-position weight from the
-training domain, in grey levels (0--255). The control is exactly zero, so the
+\caption{Array transmitter, MVDR. (a) RMS change of the rendered image when the
+instance's $\mathbf{w}$ is replaced by a same-position weight from the training
+domain, in grey levels (0--255). The blind control is exactly zero, so the
 exotic arms' 2--3 levels are a real, non-degenerate response---but it is
 $2.7$--$4.2\%$ of the ground-truth effect. (b) LPIPS on the 36 held-out
-weights; none of the $\mathbf{w}$-aware arms reaches the blind control, and
-all remain far above the ground-truth prior floor.}
+weights; none of the $\mathbf{w}$-aware arms reaches the blind control, and all
+remain far above the ground-truth prior floor.}
 \label{fig:w}
 \end{figure}
+
+The CBF block has two readings. The positive one is that the axis is
+\emph{physically present} in the images and the model is not broken by it: at
+$14.55$\,dB / $0.79$ / $0.386$ it is the strongest absolute level of any block
+in this paper, above every ground-truth-only prior in the lower panel. The
+negative one is that conditioning on $\mathbf{w}$ buys nothing: the paired
+difference is $-0.032$\,dB with 2 wins in 36, and the two renders in
+Fig.~\ref{fig:qualwcbf} are visually the same. Since the two arms differ only by
+5 input dimensions on the same data and budget, the natural question is whether
+the weights are \emph{unlearnt} or \emph{unrepresentable}. Section~\ref{sec:analysis}
+answers it with an in-domain probe.
+
+\subsection{Array transmitter with weights, MVDR}
+\label{sec:wmvdr}
+
+The same 354 instances under regularized MVDR, with the weights entering through
+the output-side complex quadratic form rather than as input dimensions. This is
+the harder operator for this axis: the multipath count is four times larger, and
+$\mathbf{w}$ changes $\hat{R}$ and hence the adaptive weights themselves.
+
+\begin{table}[!t]
+\centering
+\caption{Array transmitter, MVDR, on the 36 held-out weights (640 test views
+each, 60\,k steps). Both $\mathbf{w}$-aware arms use the complex output-side
+form; the blind control has the same data, head and budget and does not see
+$\mathbf{w}$. The bottom block is computed from ground truth only and is not a
+model.}
+\label{tab:w}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Setting & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ \\
+\midrule
+Complex $\mathbf{w}$, $\lambda_p=0$ & 11.557 & 0.7020 & 0.4627 \\
+Complex $\mathbf{w}$, $+\mathcal{L}_{\mathrm{LPIPS}}$ & 11.712 & 0.6871 & 0.4621 \\
+\textbf{$\mathbf{w}$-blind (control)} & \textbf{12.209} & \textbf{0.6894} & \textbf{0.4455} \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Reference floors from ground truth only}}\\
+Same-position training-$\mathbf{w}$ prior & 13.534 & 0.6498 & 0.2902 \\
+Sibling instance (other $\mathbf{w}$) & 12.460 & 0.6946 & 0.2877 \\
+Same-position median & 12.723 & 0.6943 & 0.2959 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.86\textwidth]{fig12_qual_w_mvdr.png}
+\caption{Array transmitter, MVDR, qualitative. Rows are two held-out-weight
+instances (318 and 340) at two test views; columns are ground truth, the two
+complex-weight arms and the blind control. The weight arms are not closer to
+ground truth than the blind arm on these views, consistent with
+Table~\ref{tab:w}.}
+\label{fig:qualwmvdr}
+\end{figure*}
 
 Two readings follow. First, the conditioning path is \emph{live}: swapping
 $\mathbf{w}$ changes the model's rendering by $2.02$ and $3.10$ grey levels in
@@ -725,42 +1052,193 @@ generalize to unseen $\mathbf{w}$ in a qualitative sense---the output moves in
 the right direction and by an amount that scales with the weight change---but
 not yet in a quantitative one.
 
-\subsection{Why the effect is small, and what it would take}
+\subsection{What may be compared across blocks}
+\label{sec:cross}
 
-The deficit is not in the weight representation. A shared 16-dimensional
-complex field of the form $c_p(\mathbf{w})=\sum_n \overline{w_n}\,s_{pn}$
-generalizes to arbitrary $\mathbf{w}$ by construction and trails a free
-per-instance complex field by only $0.76$\,dB. The binding constraint is the
-\emph{base} rendering fidelity. On the paired $\mathbf{w}$ dataset the
-pooled $u$-domain effect of changing $\mathbf{w}$ is an RMSE of $0.093$
-($\approx20.3$\,dB), while the model's base error is $0.106$--$0.160$: the
-signal is smaller than or comparable to the error it must be seen through.
-Composing the two quadratically, a model that rendered $\mathbf{w}$
-\emph{perfectly} would gain only
-$20\log_{10}(0.1508/0.1060)=3.06$\,dB (or $2.05$\,dB using the global effect
-mean $0.0926$), and the 13-epoch angular run confirms the same magnitude
+Three of the four blocks have no external baseline at all, and none of them may
+be lined up by absolute value. The defensible cross-caliber statements are
+these.
+
+(i) \emph{Within the array protocol, CBF and MVDR share the instance table,
+the views and the weights}, so their blind-control levels are the only place
+where the two operators are compared on identical data. CBF reaches
+$14.58$\,dB blind while MVDR reaches $12.21$: the MVDR target is intrinsically
+harder, which the constant-image floors confirm ($14.29$ vs $11.38$\,dB on the
+single-element protocol).
+
+(ii) \emph{Against the same-position training-weight prior} (a ground-truth
+statistic that uses no model), every $\mathbf{w}$-aware arm loses: $14.55$ vs
+$13.53$\,dB under CBF is the only place a model beats the prior on PSNR, and
+even there it loses badly on LPIPS ($0.386$ vs $0.290$). On MVDR the models lose
+on all three metrics. This is the cross-caliber comparison that matters most,
+because it does not depend on any protocol match: \emph{a simple prior built
+from the training set is still a stronger image than the conditioned model}, and
+that remains true no matter which arm is chosen.
+
+(iii) \emph{Against the single-element block}, the array block's higher CBF
+PSNR is not evidence of a better model: the $4\times4$ array concentrates the
+spectrum, which raises every method's level including the floor. We therefore
+compare only margins over each block's own floor, and those are $+1.09$\,dB
+(single-element CBF) and $+0.29$\,dB (array CBF, conditioned)---the array block
+is the weaker of the two on this reading.
+
+\section{Analysis}
+\label{sec:analysis}
+
+\subsection{Per-block reading}
+
+\paragraph{Single-element CBF.} The model is above both per-scene baselines on
+PSNR and SSIM and level on LPIPS with CORF-GS. Two mechanisms explain the
+ordering. The per-scene baselines spend their optimization on one transmitter
+and cannot share anything across transmitters; the amortized model sees 144
+configurations of the same room, so structure that is common to all of them (the
+background, the wall and floor returns, the receiver's field of view) is fitted
+once with 144 times the data. Against CORF-GS specifically, the coupling of
+optical and radio appearance helps the LPIPS tail but not the spectral
+structure, which is where the $0.75$\,dB PSNR margin comes from. The honest
+limit of this reading is the protocol difference of Section~\ref{sec:main}: the
+baselines were not regenerated with the TR\,38.901 element, and the $43.0$\,dB
+probe bounds the error that introduces at $0.005$\,dB, but a full re-run of both
+baselines under the new protocol would be the controlled version of this
+comparison.
+
+\paragraph{Held-out positions.} This block is \emph{easier} than the main
+reading ($15.88$ vs $15.38$\,dB) because its orientation and carrier come from
+the training domain: only the position is new. The model therefore interpolates
+the position field rather than combining an unseen position with unseen
+orientation and carrier. The $+0.13$\,dB gain from doubling the budget and the
+$t=6.0$ consistency show that the remaining error is optimization-limited rather
+than data-limited at this scale, and the small SSIM cost shows that the extra
+budget sharpens the spectrum's peaks at the expense of its low-contrast
+background---the same trade-off the LPIPS term was introduced to address.
+
+\paragraph{Single-element MVDR.} The absolute level is $1.17$\,dB lower than
+CBF, but the margin over its own floor is $1.7\times$ larger. The mechanism is
+in the target: MVDR's adaptive nulling sharpens peaks and suppresses the
+background, so the constant-image prior (LPIPS $0.506$) is much weaker, while
+the model's relative advantage in placing structure is preserved. That the
+conditioning mechanism survives an operator that is quadratic in the transmitter
+parameters is the substantive result of this block; the absolute level is a
+property of the operator, not of the method.
+
+\paragraph{Array with $\mathbf{w}$, CBF.} The conditioned and blind arms are
+indistinguishable, and the in-domain probe says why. We take four weights that
+are \emph{in the training set}, all at the same position, and measure the
+pairwise PSNR between ground-truth images and between model outputs. Ground
+truth differs across those weights by $22.95$\,dB; the model's outputs differ by
+$52.19$\,dB, i.e.\ the model expresses $0.1\,\%$ of the variation it was trained
+on. The blind arm expresses $0.2\,\%$---slightly more, because it does not spend
+capacity trying. A swap probe on held-out weights agrees: replacing the
+instance's weight with a same-position training weight changes the render by a
+pixel PSNR of $46.34$\,dB, which is to say almost nothing. The failure is
+therefore \emph{not} a generalization failure; the model never learned the
+within-instance variation at all.
+
+\paragraph{Array with $\mathbf{w}$, MVDR.} Here the weights are measurably
+represented---the in-domain probe shows $19.9\,\%$ of the ground-truth variation
+against $14.3\,\%$ for the blind control---and the arms are still worse than
+blind by $0.50$--$0.65$\,dB. Two effects compound. The weight effect is small in
+the metric that matters: the pooled $u$-domain effect of changing $\mathbf{w}$ is
+an RMSE of $0.093$ ($\approx20.3$\,dB), while the model's base error on this
+data is $0.106$--$0.160$, so the signal is smaller than the error it must be
+seen through. And the head pays for the channel: the rank-2 complex contraction
+diverts capacity from the base render, which is why the conditioned arms lose
+ground on LPIPS even where their PSNR is close. A blind model is a better
+\emph{image} than a conditioned model even when the conditioned one carries more
+information about $\mathbf{w}$.
+
+\subsection{Fine-tuning: what adaptation buys, and what it costs}
+\label{sec:tta}
+
+The model above is zero-shot: it sees no view of the target transmitter at
+inference. A deployment can often afford a few hundred views of the target, so
+we measured a three-rung ladder on the MVDR delivery checkpoint
+(Table~\ref{tab:tta}). Each rung changes exactly one thing, and each is
+evaluated on views the adapted model has not seen.
+
+\begin{table}[!t]
+\centering
+\caption{Test-time ladder. Rows 1--2 are feed-forward (no target views); row 3
+is transductive---it adapts on 320 randomly drawn views of the target instance
+and is scored on the disjoint remaining 320. Row 4 is an oracle: it trains on
+the very views it is scored on and is an upper bound, not a deliverable.
+Protocols differ by row and are named; LPIPS is the score of record.}
+\label{tab:tta}
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{2.55cm}ccc@{}}
+\toprule
+Setting & Protocol & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ \\
+\midrule
+Zero-shot, delivery & 53 inst. $\times$ 640 v. & 13.803 & 0.7133 & 0.4325 \\
+$+$ perceptual tail & 53 inst. $\times$ 640 v. & 13.711 & 0.7194 & \textbf{0.3957} \\
+$+$ 320-view TTA & 16 inst., held-out 320 v. & 16.438 & 0.7704 & 0.3440 \\
+Oracle (in-sample) & 1 inst., all 640 v. & 19.209 & 0.8463 & 0.2247 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The perceptual tail (row 2) is free: it continues the same checkpoint on the
+same training instances with the LPIPS weight set above its measured
+equal-point, and improves LPIPS on 53/53 instances while giving up $0.09$\,dB
+PSNR. That is the only change in this paper that improves the \emph{delivery}
+reading without target views, and it is what we would ship. Adaptation (row 3)
+buys a further $0.052$ LPIPS for 320 target views and 11\,k steps, on 16
+instances covering all 13 held-out positions, with all three metrics improving
+on 16/16. The gain is $+2.48\pm0.36$\,dB PSNR and $-0.053\pm0.014$ LPIPS, and
+its correlation with zero-shot quality ($r=+0.78$ for LPIPS) says it is
+partly a regression to the mean: the worse the instance starts, the more it
+gains.
+
+Two cautions make this a diagnostic rather than a solution. Row 3 is
+\emph{transductive}: it is not the amortized model, and its numbers must not be
+quoted as the feed-forward result. And the adaptation set must be sampled
+uniformly over position \emph{and} orientation; our 640 test views are 160
+positions with four orientations in blocks, so prefix or strided selection
+systematically mismatches the held-out set and turns the gain negative
+($-0.07$ to $-2.48$\,dB in our measurements). Random sampling is the only
+configuration that improves all three metrics.
+
+\subsection{The ceiling, and why it cannot be reached directly}
+\label{sec:ceiling}
+
+Three measurements bound where the method can go.
+
+\emph{The head is not the ceiling.} The oracle row of Table~\ref{tab:tta}
+reaches LPIPS $0.2247$ with the same 36.7\,k-parameter head, the same frozen
+geometry and the same rasterizer. The difference between $0.3440$ (adapted,
+unseen views) and $0.2247$ (in-sample) is therefore not representational
+capacity. It is the cost of amortization: one set of weights must serve every
+transmitter configuration, and the per-instance optimum is not reachable from a
+single forward pass. This is also why raising the budget stops helping---the
+$60$\,k-to-$180$\,k gain is $+0.13$\,dB, and 8\,k-to-20\,k steps of adaptation
+buys $+0.18$\,dB PSNR and \emph{loses} $0.0056$ LPIPS.
+
+\emph{The base fidelity is the binding constraint for $\mathbf{w}$.} Composing
+the weight effect ($0.093$ in $u$) with the base error ($0.106$--$0.160$)
+quadratically, a model that rendered $\mathbf{w}$ \emph{perfectly} would gain
+only $20\log_{10}(0.1508/0.1060)=3.06$\,dB over the blind arm ($2.05$\,dB using
+the global effect mean). The 13-epoch angular run confirms the magnitude
 ($+0.5$\,dB). Any $\mathbf{w}$ arm therefore differs from its control by
 amounts of the order of the $0.365$\,dB noise floor, which is exactly what
-Table~\ref{tab:w} shows. Raising this ceiling requires improving base fidelity
-first; we state that as the principal open problem of this axis rather than
-reporting further representation variants.
+Tables~\ref{tab:wcbf} and~\ref{tab:w} show.
 
-\subsection{Data and code availability}
+\emph{The representation is the second constraint.} The CBF in-domain probe
+($0.1\,\%$ expressed) says the current head cannot carry the coherent complex
+sum of Section~\ref{sec:principle} at all, even in sample. The MVDR probe
+($19.9\,\%$) says the output-side complex form is better matched but still
+leaves four fifths of the variation unexpressed. Neither is a generalization
+problem, and neither can be fixed by more data or more steps.
 
-The project is released as \emph{w-RFGS}. The repository contains the
-generator, the training and evaluation code, the instance tables and the
-per-run configuration files; the rendered spectra (572{,}160 images for the
-CBF protocol, plus the MVDR and $\mathbf{w}$ variants, several GB in total) are
-distributed as a separate archive under the release tag
-\texttt{datasets-v1} rather than committed, split into checksummed parts with
-a SHA-256 manifest alongside them. Every generated image is reproducible from
-Table~\ref{tab:protocol}: the public NIST lobby digital twin is traced with
-Sionna RT under the stated transmitter, receiver, material and normalization
-settings, and the instance tables fix the parameter draws. The download
-locations and the exact commands are kept in the repository README
-(\texttt{docs/DATASETS.md}) so that they stay current with the code.
+Put together, the ceiling is real but not reachable by the obvious moves:
+improving base fidelity requires either per-instance optimization (which
+destroys the feed-forward property that this paper is about) or a
+representation that carries phase (which the current per-point real scalar does
+not), and adding capacity to the head is ruled out by the oracle result. That is
+why we stop at measuring the axis rather than reporting further representation
+variants.
 
-\section{Discussion and Limitations}
+\subsection{Threats to validity}
 \label{sec:disc}
 
 \paragraph{Single scene.} Every number here comes from one room. The
@@ -787,19 +1265,37 @@ parameter draws does not degrade position generalization (Table~\ref{tab:holdout
 and that the joint unseen-position/unseen-parameter case is rendered
 competitively (Table~\ref{tab:main}).
 
-\paragraph{Array weights are representable, not yet exploited.}
-Section~\ref{sec:w} shows a live but weak $\mathbf{w}$ channel: the model
-responds to a weight it has never seen, at $2.7$--$4.2\%$ of the ground-truth
-effect, and loses to a control that ignores $\mathbf{w}$. We do not read this
-as evidence against the axis---the ceiling imposed by base fidelity is
-$2$--$3$\,dB, larger than any effect we could currently resolve---but it does
-mean that a $\mathbf{w}$-conditioned model is not yet a usable replacement for
-per-precoder fitting.
+\paragraph{Cross-protocol references.} The published and legacy rows were
+generated with a different transmitter antenna. We quantified the discrepancy
+and argued it is below our resolution, but it remains a caveat rather than a
+controlled comparison.
 
-\paragraph{Cross-protocol references.} As stated in Section~\ref{sec:exp}, the
-published and legacy rows were generated with a different transmitter antenna.
-We quantified the discrepancy and argued it is below our resolution, but it
-remains a caveat rather than a controlled comparison.
+\section{Future Work}
+\label{sec:future}
+
+The measurements above point at a short list, ordered by leverage.
+
+\emph{Base rendering fidelity first.} Every axis is limited by it: the
+$\mathbf{w}$ effect is below the base error, and the blind arm is beaten by a
+training-set prior on LPIPS. The oracle result says the head and renderer can do
+much better, so the relevant questions are how to condition more deeply (a
+per-instance hypernetwork, deeper modulation) and how to train an amortized
+optimizer that reaches per-instance quality in one or a few steps.
+
+\emph{A representation that carries phase.} The CBF probe shows a real-valued
+per-point scalar cannot express the coherent sum over array elements. A
+two-channel (real and imaginary) per-point field, or moving $\mathbf{w}$ into
+the rendering equation rather than into the head, are the direct fixes, and both
+are testable with the data already released.
+
+\emph{Composing the two amortizations.} CoRF \cite{corf} amortizes across
+scenes and this paper amortizes across transmitters; the two are orthogonal and
+the composition would be a model that renders any transmitter in any room.
+
+\emph{Measured data, and more than one transmitter.} A measured CSI campaign
+would test whether the simulated parameter dependence survives real propagation,
+and a multi-transmitter protocol with stored per-image scale factors would
+remove the normalization constraint that currently makes power unobservable.
 
 \section{Conclusion}
 
@@ -813,13 +1309,31 @@ band, and constrain the output to a scalar field so the network models the
 physics rather than the colormap. With geometry frozen from an optical 3DGS and
 only a 36.7\,k-parameter head trained across 144 transmitter instances, an
 unseen position with an unseen orientation and carrier is rendered in one
-forward pass at 15.38\,dB PSNR / 0.764 SSIM / 0.404 LPIPS. The remaining
-weaknesses are stated in Section~\ref{sec:disc}: one scene, one transmitter at a
-time, and external comparisons that are indicative rather than exact. The same
-mechanism extends to the beamforming weights of an array transmitter, where we
-find a live but weak channel: unseen weights change the rendering, but only by
-a few percent of the true effect, and the binding constraint is base fidelity
-rather than the weight representation.
+forward pass at 15.38\,dB PSNR / 0.764 SSIM / 0.404 LPIPS, and the same
+mechanism holds under a second imaging operator. The same mechanism extends to
+the beamforming weights of an array transmitter, where we find a live but weak
+channel: unseen weights change the rendering, but only by a few percent of the
+true effect, the model does not express even the weights it was trained on, and
+the binding constraints are representation and base fidelity rather than
+generalization. A test-time ladder from $0.396$ to $0.225$ LPIPS shows that the
+remaining gap is the price of amortization, not a limit of the architecture.
+
+\section*{Data and code availability}
+\label{sec:avail}
+
+The project is released as \emph{w-RFGS}. The repository contains the
+generator, the training and evaluation code, the instance tables and the
+per-run configuration files; the rendered spectra (572{,}160 images for the
+CBF protocol, plus the MVDR and $\mathbf{w}$ variants, several GB in total) are
+distributed as a separate archive under the release tag
+\texttt{datasets-v1} rather than committed, split into checksummed parts with
+a SHA-256 manifest alongside them. Every generated image is reproducible from
+Table~\ref{tab:protocol}: the public NIST lobby digital twin is traced with
+Sionna RT under the stated transmitter, receiver, material and normalization
+settings, and the instance tables fix the parameter draws. The download
+locations and the exact commands are kept in the repository documentation
+(\texttt{docs/DATASETS.md}, \texttt{docs/REPRODUCE.md}) so that they stay
+current with the code.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

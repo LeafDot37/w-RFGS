@@ -290,39 +290,39 @@ def fig3_gates():
 # Fig. 4 —— 定性对照
 # --------------------------------------------------------------------------- #
 def fig4_qual(views=("00005", "00649", "01501", "02328")):
+    """行=方法、列=视角。横置后图高约为竖置的 0.58 倍，双栏版面能省半页。"""
     gdir = RUN180 / f"full/test_inst/inst{QUAL_INST:03d}/gt"
     rdir = RUN180 / f"full/test_inst/inst{QUAL_INST:03d}/renders"
-    cols = [("Ground truth", gdir), ("RF-3DGS (released)", AUTH),
-            ("Ours", rdir)]
-    rows = []
-    for v in views:
+    rows_m = [("GT", gdir), ("RF-3DGS", AUTH), ("Ours", rdir)]
+    cells = []
+    for _, d in rows_m:
         row = []
-        for _, d in cols:
+        for v in views:
             p = d / f"{v}.png"
             if not p.exists():
                 raise FileNotFoundError(f"缺图：{p}")
             row.append(np.asarray(Image.open(p).convert("RGB")))
-        rows.append(row)
-    h, w = rows[0][0].shape[:2]
-    nr, nc = len(rows), len(cols)
+        cells.append(row)
+    h, w = cells[0][0].shape[:2]
+    nr, nc = len(cells), len(views)
     gap = 4
     fig, axs = plt.subplots(nr, nc, figsize=(W2, W2 * (nr * h + (nr - 1) * gap)
                                             / (nc * w + (nc - 1) * gap)),
-                            gridspec_kw={"wspace": 0.012, "hspace": 0.03})
+                            gridspec_kw={"wspace": 0.012, "hspace": 0.03},
+                            squeeze=False)
     for r in range(nr):
         for c in range(nc):
-            axs[r, c].imshow(rows[r][c], aspect="auto")
+            axs[r, c].imshow(cells[r][c], aspect="auto")
             axs[r, c].set_xticks([]); axs[r, c].set_yticks([])
             for s in axs[r, c].spines.values():
                 s.set_linewidth(0.4)
             if r == 0:
-                axs[r, c].set_title(cols[c][0], fontsize=7.5, pad=2.5)
-    # 视角标签用 fig.text 画在最左外侧，避免等宽 ylabel 被 tight bbox 裁掉首字
-    fig.subplots_adjust(left=0.045, right=0.999, top=0.94, bottom=0.005)
-    for r, v in enumerate(views):
+                axs[r, c].set_title(views[c], fontsize=7.0, pad=2.5)
+    fig.subplots_adjust(left=0.048, right=0.999, top=0.92, bottom=0.005)
+    for r, (lab, _) in enumerate(rows_m):
         pos = axs[r, 0].get_position()
-        fig.text(0.012, (pos.y0 + pos.y1) / 2, v, rotation=90, ha="center",
-                 va="center", fontsize=6.4)
+        fig.text(0.012, (pos.y0 + pos.y1) / 2, lab, rotation=90, ha="center",
+                 va="center", fontsize=6.6)
     fig.savefig(FIG / "fig4_qual.png", dpi=300, bbox_inches=None)
     plt.close(fig)
 
