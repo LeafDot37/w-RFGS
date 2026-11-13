@@ -47,7 +47,10 @@ held-out orientation and a held-out carrier, the model reaches
 15.38\,dB PSNR / 0.7638 SSIM / 0.4040 LPIPS, against 14.13 / 0.7233 / 0.4457
 for the published per-scene RF-3DGS, and it keeps its margin under a second
 imaging operator (regularized MVDR), where a constant-image floor of
-11.38\,dB leaves it $+2.83$\,dB. We then extend the conditioning to the
+11.38\,dB leaves it $+2.83$\,dB. Stratifying the views by image brightness
+shows where that margin comes from---$+2.9$\,dB on the dimmest quartile,
+$-0.3$\,dB on the brightest---and the bright core is the open problem, not the
+low-contrast background. We then extend the conditioning to the
 \emph{beamforming weights} of a $4\times4$ array transmitter, an axis on which
 the literature offers no baseline, and report it on two operators: under CBF the
 $\mathbf{w}$-conditioned arm is statistically indistinguishable from a
@@ -157,6 +160,11 @@ two different imaging operators (Sections~\ref{sec:main} and~\ref{sec:mvdr}): th
 main reading improves PSNR by 1.25\,dB over the published per-scene RF-3DGS, but
 the two were evaluated under different generation protocols, and we say so
 explicitly.
+\item A brightness-stratified error analysis (Section~\ref{sec:where}) that
+locates the benefit in the low-contrast background of the spectrum and the
+residual error in the bright core, together with a negative result on the
+obvious repair (no global gain on the scalar output improves PSNR) and a
+measurement of how far each head reaches into the warm end of the palette.
 \item A first measurement, to our knowledge, of conditioning a radio radiance
 field on array beamforming weights
 (Sections~\ref{sec:wcbf}--\ref{sec:wmvdr}). We show the axis is physically
@@ -831,9 +839,12 @@ which the per-scene baseline smooths out.
 \centering
 \includegraphics[width=\textwidth]{fig4_qual.png}
 \caption{Single-element transmitter, CBF, qualitative (main reading, instance
-317). Columns: ground truth, released RF-3DGS render (legacy protocol, included
-as a visual reference), and our feed-forward render. Jets are the dataset's
-fixed colour map; brightness is not comparable across rows.}
+317). Rows: ground truth, released RF-3DGS render (legacy protocol, included as
+a visual reference), and our feed-forward render; columns: four test views.
+Views are drawn from the top quartile of per-view PSNR and were chosen, under
+that rule, to span distinct camera poses; they are best-case illustrations and
+Table~\ref{tab:main} is the unbiased reading. Jets are the dataset's fixed
+colour map; brightness is not comparable across rows.}
 \label{fig:qual}
 \end{figure*}
 
@@ -884,11 +895,13 @@ against Table~\ref{tab:main}.}
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig10_qual_mvdr.png}
-\caption{Single-element transmitter, MVDR, qualitative. Rows are four test
-views at the main reading; columns are ground truth, the released RF-3DGS
-render under MVDR, and ours. The released render is included as a visual
-reference only: it was fitted to the same scene under the legacy protocol, and
-its protocol differs from the row above it.}
+\caption{Single-element transmitter, MVDR, qualitative. Rows 1--2: the authors'
+ground truth and the released RF-3DGS MVDR render, i.e.\ their protocol. Rows
+3--4: our ground truth and our render, i.e.\ our protocol. Each render is scored
+against the ground truth of its own group; the two ground-truth generators
+agree on these four views to only $3.3$--$8.3$\,dB, which is exactly why the
+two groups cannot be ranked against each other. Views are from the top quartile
+of per-view PSNR.}
 \label{fig:qualmvdr}
 \end{figure*}
 
@@ -965,12 +978,13 @@ Table~\ref{tab:wcbf}.}
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.86\textwidth]{fig11_qual_w_cbf.png}
-\caption{Array transmitter, CBF, qualitative. Rows are three held-out-weight
-instances (331, 333, 349) at the same test view; columns are ground truth, the
-$\mathbf{w}$-conditioned arm and the $\mathbf{w}$-blind control. The two
-renders are visually indistinguishable, which is the point of
-Table~\ref{tab:wcbf}: the conditioned model does not carry the weight into the
-image at a resolvable level.}
+\caption{Array transmitter, CBF, qualitative. Rows: ground truth, the
+$\mathbf{w}$-conditioned arm and the $\mathbf{w}$-blind control; columns: four
+(instance, view) pairs, chosen from the top quartile of the conditioned arm's
+per-view PSNR. The two renders are visually indistinguishable, which is the
+point of Table~\ref{tab:wcbf}: the conditioned model does not carry the weight
+into the image at a resolvable level. Both learned rows also stop short of the
+palette's warm end (Fig.~\ref{fig:where}b).}
 \label{fig:qualwcbf}
 \end{figure*}
 
@@ -1014,8 +1028,10 @@ $\hat{R}$ and hence the adaptive weights themselves.
 \caption{Array transmitter, MVDR, on the 36 held-out weights (640 test views
 each, 60\,k steps). Both $\mathbf{w}$-aware arms use the complex output-side
 form; the blind control has the same data, head and budget and does not see
-$\mathbf{w}$. The three rows below the rule are computed from ground truth only
-and are not models.}
+$\mathbf{w}$. The two 180\,k rows are a separate representation (a 5-dimensional
+pointing block instead of the complex form) and are paired with each other, not
+with the rows above. The three rows below the rule are computed from ground
+truth only and are not models.}
 \label{tab:w}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -1026,6 +1042,9 @@ Setting & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ \\
 Complex $\mathbf{w}$, $\lambda_p=0$ & 11.557 & 0.7020 & 0.4627 \\
 Complex $\mathbf{w}$, $+\mathcal{L}_{\mathrm{LPIPS}}$ & 11.712 & 0.6871 & 0.4621 \\
 \textbf{$\mathbf{w}$-blind (control)} & \textbf{12.209} & \textbf{0.6894} & \textbf{0.4455} \\
+\midrule
+5-d pointing $\mathbf{w}$, 180\,k & 12.190 & 0.6903 & 0.4597 \\
+5-d $\mathbf{w}$-blind, 180\,k & 12.188 & \textbf{0.6971} & \textbf{0.4486} \\
 \midrule
 \multicolumn{4}{@{}l}{\emph{Reference floors from ground truth only}}\\
 Same-position training-$\mathbf{w}$ prior & 13.534 & 0.6498 & 0.2902 \\
@@ -1038,11 +1057,12 @@ Same-position median & 12.723 & 0.6943 & 0.2959 \\
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.86\textwidth]{fig12_qual_w_mvdr.png}
-\caption{Array transmitter, MVDR, qualitative. Rows are two held-out-weight
-instances (318 and 340) at two test views; columns are ground truth, the two
-complex-weight arms and the blind control. The weight arms are not closer to
-ground truth than the blind arm on these views, consistent with
-Table~\ref{tab:w}.}
+\caption{Array transmitter, MVDR, qualitative. Rows: ground truth, the two
+complex-weight arms and the blind control; columns: four (instance, view)
+pairs. The weight arms are not closer to ground truth than the blind arm on
+these views, consistent with Table~\ref{tab:w}. The two behaviours at the warm
+end are opposite and both wrong: the conditioned arms never reach it, the blind
+control overshoots it (Fig.~\ref{fig:where}b).}
 \label{fig:qualwmvdr}
 \end{figure*}
 
@@ -1056,6 +1076,15 @@ wins by $0.50$\,dB PSNR and $0.0166$ LPIPS. In other words, the model does
 generalize to unseen $\mathbf{w}$ in a qualitative sense---the output moves in
 the right direction and by an amount that scales with the weight change---but
 not yet in a quantitative one.
+
+A third representation on the same axis---$\mathbf{w}$ entering as five input
+dimensions rather than through the complex output-side contraction, trained to
+180\,k steps---lands at $12.190$ against $12.188$ for its own blind control,
+i.e.\ parity rather than a deficit. The deficit in the complex arms is therefore
+attributable, at least in part, to the contraction and not to the axis itself.
+Parity is still not a gain, and this arm shows the same warm-end collapse as the
+others (Fig.~\ref{fig:where}b uses the complex arms because they are the ones
+with the diagnostic probes).
 
 \subsection{What may be compared across blocks}
 \label{sec:cross}
@@ -1153,6 +1182,65 @@ ground on LPIPS even where their PSNR is close. A blind model is a better
 \emph{image} than a conditioned model even when the conditioned one carries more
 information about $\mathbf{w}$.
 
+\subsection{Where the error lives: bright regions}
+\label{sec:where}
+
+The aggregate numbers above average over 640 views that differ by more than an
+order of magnitude in how much of the image is bright. Fig.~\ref{fig:where}a
+splits the main reading by the ground truth's bright-pixel fraction (mean
+luminance above $0.6$). The advantage is not spread evenly: $+2.91$\,dB on the
+dimmest quartile and $+2.65$\,dB on the next, $+0.43$\,dB on the third, and
+$-0.30$\,dB on the brightest. The $+1.09$\,dB of Table~\ref{tab:main} is
+therefore bought almost entirely on the half of the views whose ground truth is
+mostly background. Both columns are recomputed on our views for this split; the
+released renders score $13.96$\,dB here against the $14.13$\,dB of
+Table~\ref{tab:main}, which is the authors' own protocol-level number.
+
+Fig.~\ref{fig:where}b makes the mechanism concrete. Counting pixels in the warm
+part of the palette ($R>150$ and $G>60$), the single-transmitter heads do reach
+it: $0.85\%$ of pixels against $2.41\%$ in ground truth on CBF, and $2.07\%$
+against $5.93\%$ on MVDR---about a third of the true coverage, but present in
+414 of 640 and 96 of 160 views respectively. The $\mathbf{w}$-conditioned heads
+never do: zero warm pixels in all 1280 rendered views of the two w$\cdot$CBF
+instances and in all eight selected w$\cdot$MVDR conditioned views, against
+$1.99\%$ and $0.375\%$ in their ground truth. The blind w$\cdot$MVDR control
+errs in the opposite direction, placing $3.55\%$ of the image in the warm end
+where ground truth has $0.375\%$: its small PSNR edge over the conditioned arm
+comes with a \emph{worse} magnitude distribution, not a better one.
+
+The natural repair is a global gain, since the model's scalar output is
+compressed ($99$th percentile $0.52$ against $0.78$ in ground truth; pixels
+above $0.85$: $0.16\%$ against $0.66\%$). We inverted the palette and swept
+$u'=a\,u+b$ over eight gains and five offsets on 50 views. No setting beats the
+identity: $15.33$\,dB at $(1,0)$, $14.41$\,dB at the best non-identity
+$(1.30,-0.05)$. Expanding the range relocates the error rather than removing
+it, which is what the stratification already implies---the failure is in where
+the energy is placed, not in a single missing multiplier.
+
+We state the limitation plainly: the measured advantage of the method lies in
+the low-contrast background structure of the spectrum, where per-scene
+baselines over-smooth, and its open problem is peak magnitude. Three
+consequences follow. Aggregate PSNR overstates usable quality for a downstream
+task that cares about the dominant lobe. The $\mathbf{w}$ blocks and the
+single-transmitter blocks fail along the same axis, differing only in degree
+(warm coverage $35\%$ against $0\%$). And the ceiling of
+Section~\ref{sec:ceiling} is an upper bound for the \emph{current} output
+parameterisation, which motivates predicting magnitude and shape through
+separate channels.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig13_where.pdf}
+\caption{Where the error lives. (a) PSNR on the main reading, split into
+quartiles of the ground truth's bright-pixel fraction (number under each tick is
+the quartile's mean fraction). The gap over the per-scene baseline inverts on
+the brightest quartile. (b) Fraction of pixels in the warm end of the palette.
+The single-transmitter heads reach it at about a third of the ground-truth
+coverage; the $\mathbf{w}$-conditioned heads never do; the blind
+w$\cdot$MVDR control overshoots.}
+\label{fig:where}
+\end{figure*}
+
 \subsection{Fine-tuning: what adaptation buys, and what it costs}
 \label{sec:tta}
 
@@ -1209,6 +1297,30 @@ positions with four orientations in blocks, so prefix or strided selection
 systematically mismatches the held-out set and turns the gain negative
 ($-0.07$ to $-2.48$\,dB in our measurements). Random sampling is the only
 configuration that improves all three metrics.
+
+Fig.~\ref{fig:qualtta} shows what adaptation does to the failure mode of
+Section~\ref{sec:where}. On instance 150's held-out 320 views the zero-shot
+model reaches $14.11$\,dB and covers $3.26\%$ of the warm palette against
+$5.07\%$ in ground truth; the adapted checkpoint reaches $17.07$\,dB and
+$3.87\%$. The per-view behaviour is more informative than the mean: on view
+1503 the zero-shot render has \emph{no} warm pixel at all while ground truth
+has $7.13\%$, and adaptation puts $7.72\%$ back. The bright core that the
+feed-forward pass cannot place is therefore a property of amortization rather
+than of the head or the palette: given a few hundred views, the same head
+recovers it. That is the strongest evidence we have for the ceiling argument
+below, and it is also the honest boundary of our claim---without those views,
+the feed-forward model renders the lobe but not its peak.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.86\textwidth]{fig14_qual_tta.png}
+\caption{Test-time adaptation, qualitative (instance 150, four held-out test
+views not used for adaptation). Rows: ground truth, the zero-shot delivery
+checkpoint, and the same checkpoint after 320 target views and 20\,k steps.
+The adapted row restores the warm core that the zero-shot row never renders;
+Table~\ref{tab:tta} row 4 is the aggregate reading of this arm.}
+\label{fig:qualtta}
+\end{figure*}
 
 \subsection{The ceiling, and why it cannot be reached directly}
 \label{sec:ceiling}

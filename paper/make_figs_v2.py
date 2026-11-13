@@ -33,12 +33,18 @@ FIG.mkdir(parents=True, exist_ok=True)
 
 # —— 出处路径 ——
 RUNM = ROOT / "results/run_20261027_服务器4090D_MVDR参数泛化"
-QUAL_M = RUNM / "_xfer/qual_cbfviews/inst317"          # gt / renders / rf3dgs_mvdr
+QUAL_M = RUNM / "全量评测/test_full/inst317"            # 我方协议：gt / renders（160 视角）
+# 作者协议：发布渲染按 test_index.txt 的行号命名（00000.png …），我方视角号 → 行号
+MV_AUTH = ROOT / ("datasets/RF-3DGS_dataset/RF-3DGS_trained_RRF/"
+                  "3dgs_MVDR_100/test/ours_40000")       # gt / renders
+MV_TEST = ROOT / "datasets/RF-3DGS_dataset/training-rf-spectrum/3dgs_MVDR_100/test_index.txt"
 RUNW1 = ROOT / "results/run_20261029_服务器4090D_波束权泛化"
-QUAL_W_CBF = RUNW1 / "_raw/qual"                        # {w,blind}/instXXX/{gt,renders}
+QUAL_W_CBF = RUNW1 / "_raw/qual_sel"                     # wcbf_<inst>_<view>_{gt,w,blind}.png
 DATA_W = RUNW1 / "图/数据.json"                          # 逐实例读数
 RUNW2 = ROOT / "results/run_20261101_服务器4080_波束权复值场"
-QUAL_W_MVDR = RUNW2 / "_图源"                            # GT_i###_vvvvv.png 等平铺命名
+QUAL_W_MVDR = RUNW2 / "_图源_sel"                        # wmvdr_<inst>_<view>_{gt,eq,ps,bl}.png
+BRIGHT = ROOT / "results/_brightness_analysis.json"      # 亮区分档 / 暖色覆盖率 / 增益标定
+QUAL_TTA = RUNM / "小样本适应/定性_新选"                  # tta_<view>_{gt,zs,ad}.png
 
 W1, W2 = 3.45, 7.16
 C_OURS, C_REF, C_FLOOR, C_BLIND = "#d1495b", "#8c8c8c", "#2a9d8f", "#4a6fa5"
@@ -210,41 +216,97 @@ def im(p):
 
 
 def fig10_qual_mvdr():
-    views = ["00005", "00649", "01501", "02328"]
-    rows_m = [("Ground truth", QUAL_M / "gt"),
-              ("RF-3DGS (released, MVDR)", QUAL_M / "rf3dgs_mvdr"),
-              ("Ours (MVDR)", QUAL_M / "renders")]
-    cells = []
-    for _, d in rows_m:
-        cells.append([im(d / f"{v}.png") for v in views])
+    """两协议并列：上两行是作者协议（GT + 其发布渲染），下两行是我方协议。
+
+    两个 GT 生成器本身差 3–8 dB，所以**每行只允许与同协议的 GT 比**；本图的作用
+    正是把这条断层摆出来。视角号是我方的（作者侧按 test_index.txt 行号换算）。
+    """
+    views = ["00006", "00100", "00380", "00424"]
+    lines = [s.strip() for s in MV_TEST.read_text(encoding="utf-8").splitlines() if s.strip()]
+    rows_m = [
+        ("Their GT", lambda v: MV_AUTH / "gt" / f"{lines.index(v):05d}.png"),
+        ("RF-3DGS (theirs)", lambda v: MV_AUTH / "renders" / f"{lines.index(v):05d}.png"),
+        ("Our GT", lambda v: QUAL_M / "gt" / f"{v}.png"),
+        ("Ours", lambda v: QUAL_M / "renders" / f"{v}.png"),
+    ]
+    cells = [[im(f(v)) for v in views] for _, f in rows_m]
     montage(cells, views, [t for t, _ in rows_m], "fig10_qual_mvdr.png")
 
 
 def fig11_qual_w_cbf():
-    insts = [331, 333, 349]
-    cols = [("Ground truth", QUAL_W_CBF / "w" / "inst331" / "gt"),
-            ("w-conditioned", QUAL_W_CBF / "w"),
-            ("w-blind (control)", QUAL_W_CBF / "blind")]
-    cells, labels = [], []
-    for i in insts:
-        row = []
-        for k, (_, d) in enumerate(cols):
-            base = d if k == 0 else d / f"inst{i:03d}" / "renders"
-            row.append(im(base / "00005.png"))
-        cells.append(row)
-        labels.append(f"w-inst {i}")
-    montage(cells, [t for t, _ in cols], labels, "fig11_qual_w_cbf.png")
+    cols = [(349, "02172"), (351, "01822"), (349, "01055"), (351, "02216")]
+    rows_k = [("Ground truth", "gt"), ("w-conditioned", "w"), ("w-blind (control)", "blind")]
+    cells = [[im(QUAL_W_CBF / f"wcbf_{i}_{v}_{k}.png") for i, v in cols] for _, k in rows_k]
+    montage(cells, [f"w-inst {i} / view {int(v)}" for i, v in cols],
+            [t for t, _ in rows_k], "fig11_qual_w_cbf.png")
 
 
 def fig12_qual_w_mvdr():
-    pairs = [(318, "00005"), (318, "00052"), (340, "00005"), (340, "00052")]
-    names = [("GT", "GT"), ("complex, $\\lambda_p{=}0$", "复值_等权"),
-             ("complex, +LPIPS", "复值_感知"), ("w-blind", "盲臂_感知")]
-    cells, labels = [], []
-    for i, v in pairs:
-        cells.append([im(QUAL_W_MVDR / f"{pre}_i{i}_{v}.png") for _, pre in names])
-        labels.append(f"w-inst {i}, view {v.lstrip('0')}")
-    montage(cells, [t for t, _ in names], labels, "fig12_qual_w_mvdr.png")
+    cols = [(349, "00098"), (350, "00118"), (350, "01925"), (343, "01232")]
+    rows_k = [("Ground truth", "gt"), ("complex, $\\lambda_p{=}0$", "eq"),
+              ("complex, +LPIPS", "ps"), ("w-blind (control)", "bl")]
+    cells = [[im(QUAL_W_MVDR / f"wmvdr_{i}_{v}_{k}.png") for i, v in cols] for _, k in rows_k]
+    montage(cells, [f"w-inst {i} / view {int(v)}" for i, v in cols],
+            [t for t, _ in rows_k], "fig12_qual_w_mvdr.png")
+
+
+def fig14_qual_tta():
+    """微调定性：GT / 零样本 / 适应后，实例 150 的 4 个留出视角。"""
+    views = ["01503", "00442", "00286", "02722"]
+    rows_k = [("Ground truth", "gt"), ("Zero-shot", "zs"),
+              ("+320 views, 20 k steps", "ad")]
+    cells = [[im(QUAL_TTA / f"tta_{v}_{k}.png") for v in views] for _, k in rows_k]
+    montage(cells, [f"view {int(v)}" for v in views],
+            [t for t, _ in rows_k], "fig14_qual_tta.png")
+
+
+def fig13_where():
+    """亮区分档误差 + 暖色覆盖率：说明优势集中在暗视角、且 w 头到不了色标暖端。"""
+    d = jl(BRIGHT)
+    q = d["strat_cbf"]["quartiles"]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W2, 1.72),
+                                   gridspec_kw={"width_ratios": [1.0, 1.18], "wspace": 0.30})
+    x = np.arange(len(q))
+    w = 0.38
+    a = [r["ours"] for r in q]
+    b = [r["ref"] for r in q]
+    ax1.bar(x - w / 2, a, w, color=C_OURS, edgecolor="black", lw=0.4, label="Ours")
+    ax1.bar(x + w / 2, b, w, color=C_REF, edgecolor="black", lw=0.4, label="RF-3DGS")
+    for xi, va, vb in zip(x, a, b):
+        ax1.text(xi - w / 2, va + 0.25, f"{va:.1f}", ha="center", va="bottom", fontsize=5.8)
+        ax1.text(xi + w / 2, vb + 0.25, f"{vb:.1f}", ha="center", va="bottom", fontsize=5.8)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([f'{r["q"]}\n{r["bright"]:.3f}' for r in q], fontsize=6.4)
+    ax1.set_xlabel("Ground-truth bright-pixel fraction (quartile)")
+    ax1.set_ylabel("PSNR (dB)")
+    ax1.set_ylim(0, max(max(a), max(b)) * 1.22)
+    ax1.legend(loc="upper right", frameon=False, handlelength=1.0)
+    ax1.grid(axis="y", alpha=0.2, lw=0.4)
+    ax1.tick_params(length=2)
+    ax1.set_title("(a) Single-transmitter CBF, 640 views", fontsize=7.2)
+
+    wm = d["warm"]
+    names = [r["arm"] for r in wm]
+    gtv = [r["gt"] for r in wm]
+    mv = [r["model"] for r in wm]
+    y = np.arange(len(wm))[::-1]
+    ax2.barh(y + w / 2, gtv, w, color="#bcbcbc", edgecolor="black", lw=0.4, label="Ground truth")
+    ax2.barh(y - w / 2, mv, w, color=C_OURS, edgecolor="black", lw=0.4, label="Model")
+    for yi, va, vb in zip(y, gtv, mv):
+        ax2.text(va + 0.06, yi + w / 2, f"{va:.2f}", va="center", fontsize=5.6)
+        ax2.text(max(vb, 0.02) + 0.06, yi - w / 2, f"{vb:.3f}", va="center", fontsize=5.6)
+    ax2.set_yticks(y)
+    ax2.set_yticklabels(names, fontsize=6.2)
+    ax2.set_xlabel("Warm-colour pixels (\\% of image)")
+    ax2.set_xlim(0, max(gtv + mv) * 1.20)
+    ax2.legend(loc="lower right", frameon=False, handlelength=1.0)
+    ax2.grid(axis="x", alpha=0.2, lw=0.4)
+    ax2.tick_params(length=2)
+    ax2.set_title("(b) Coverage of the warm end of the palette", fontsize=7.2)
+    fig.savefig(FIG / "fig13_where.pdf")
+    fig.savefig(FIG / "fig13_where.png", dpi=300)
+    plt.close(fig)
+    print("[fig13_where] ok")
 
 
 def main():
@@ -253,6 +315,8 @@ def main():
     fig10_qual_mvdr()
     fig11_qual_w_cbf()
     fig12_qual_w_mvdr()
+    fig13_where()
+    fig14_qual_tta()
 
 
 if __name__ == "__main__":
