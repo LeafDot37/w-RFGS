@@ -177,9 +177,10 @@ RF-3DGS \cite{rf3dgs} replaces the coordinate MLP with 3D Gaussians
 multipath component---rather than a scalar power map. GRaF \cite{graf}
 trains a generalizable radio radiance field over a set of scenes. Convolutional
 radio-map estimators such as RadioUNet \cite{radiounet} predict path loss or
-power maps from geometry without a radiance-field parameterization.
-RS--RF-3DGS and its descendants reconstruct a spectrum from the multipath
-measured under whatever transmitter the measurement campaign used.
+power maps from geometry without a radiance-field parameterization. Every one of
+these systems reconstructs the channel from measurements taken under whatever
+transmitter the campaign used, and carries that transmitter implicitly in its
+fitted parameters.
 
 \paragraph{Coupled and cross-scene RF Gaussian splatting}
 CORF-GS \cite{corfgs} couples optical and radio appearance on shared Gaussian
@@ -370,14 +371,14 @@ is scored on the same camera set. Propagation is traced with Sionna RT
 \cite{sionna,sionnart}. Each solve produces the multipath components at a
 $10\times10$ receive array, and the AoA image is formed by the operator under
 study. Table~\ref{tab:protocol} lists the settings; the two marked entries are
-load-bearing and easy to get wrong.
+load-bearing and easy to get wrong, so we state them separately.
 
 \begin{table}[!t]
 \centering
-\caption{Generation protocol. Both marked rows are protocol requirements, not
-preferences: with an isotropic radiator the orientation axis is vacuous, and
-with the material callback active the carrier changes the material as well as
-the propagation.}
+\caption{Generation protocol. The marked rows are requirements, not preferences:
+$^\dagger$ an isotropic radiator would make the orientation axis vacuous, and
+$^\ddagger$ an active material callback would let a carrier change alter the
+material as well as the propagation.}
 \label{tab:protocol}
 \small
 \setlength{\tabcolsep}{3.5pt}
@@ -387,10 +388,10 @@ Scene & NIST lobby digital twin ($\approx14\times15$\,m$^2$) \\
 Optical & Blender renders, 3{,}200 posed views (2{,}560/640) \\
 Image & $300\times200$, $90^\circ$ FoV, 8-bit, per-image min--max \\
 Receiver & $10\times10$ planar array, TR\,38.901 pattern \\
-Transmitter & $1\times1$ TR\,38.901 element;\ \ $4\times4$ for $\mathbf{w}$ \\
+Transmitter$^\dagger$ & $1\times1$ TR\,38.901 element;\ \ $4\times4$ for $\mathbf{w}$ \\
 Propagation & Sionna RT, max depth 1, specular only (CBF) \\
  & diffuse on, $\approx1.6\times10^{5}$ paths (MVDR) \\
-Materials & tutorial values at 60\,GHz, callback frozen \\
+Materials$^\ddagger$ & tutorial values at 60\,GHz, callback frozen \\
 Carrier & declared $[2.0,4.5]$\,GHz \\
 TX positions & 36 train / 13 held out (of 49) \\
 \bottomrule
@@ -475,6 +476,7 @@ Dataset & Role & Inst. & Views & Images \\
 MVDR & base + held-out $\mathbf{w}$ & 354 & 640 & 226{,}560 \\
 CBF & base + held-out $\mathbf{w}$ & 354 & 640 & 226{,}560 \\
 CBF & $+$ sibling-weight pairs & 144 & 640 & 92{,}160 \\
+CBF & \emph{total} & 498 & & 318{,}720 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -925,9 +927,9 @@ the comparison.
 \caption{Array transmitter, CBF, on the 36 held-out weights (640 test views
 each, 60\,k steps). The blind row is the same model, data and budget without the
 weight block. $\Delta$ is conditioned minus blind, paired per instance; a
-positive $\Delta$PSNR would be a win. The last two rows are not models: they
-are computed from ground truth only and bound what ignoring $\mathbf{w}$ can
-reach.}
+positive $\Delta$PSNR would be a win. The three rows below the rule are computed
+from ground truth only and are not models; they bound what ignoring
+$\mathbf{w}$ can reach.}
 \label{tab:wcbf}
 \small
 \setlength{\tabcolsep}{3.5pt}
@@ -987,8 +989,10 @@ remain far above the ground-truth prior floor.}
 
 The CBF block has two readings. The positive one is that the axis is
 \emph{physically present} in the images and the model is not broken by it: at
-$14.55$\,dB / $0.79$ / $0.386$ it is the strongest absolute level of any block
-in this paper, above every ground-truth-only prior in the lower panel. The
+$14.55$\,dB / $0.7905$ / $0.386$ it is the highest PSNR and SSIM of any block in
+this paper, and above every ground-truth-only prior on those two metrics---though
+not on LPIPS, where the same-position prior is far better ($0.290$ vs $0.386$).
+The
 negative one is that conditioning on $\mathbf{w}$ buys nothing: the paired
 difference is $-0.032$\,dB with 2 wins in 36, and the two renders in
 Fig.~\ref{fig:qualwcbf} are visually the same. Since the two arms differ only by
@@ -1001,16 +1005,17 @@ answers it with an in-domain probe.
 
 The same 354 instances under regularized MVDR, with the weights entering through
 the output-side complex quadratic form rather than as input dimensions. This is
-the harder operator for this axis: the multipath count is four times larger, and
-$\mathbf{w}$ changes $\hat{R}$ and hence the adaptive weights themselves.
+the harder operator for this axis: diffuse scattering is on ($\approx6.35\times
+10^{5}$ paths per solve instead of about six), and $\mathbf{w}$ changes
+$\hat{R}$ and hence the adaptive weights themselves.
 
 \begin{table}[!t]
 \centering
 \caption{Array transmitter, MVDR, on the 36 held-out weights (640 test views
 each, 60\,k steps). Both $\mathbf{w}$-aware arms use the complex output-side
 form; the blind control has the same data, head and budget and does not see
-$\mathbf{w}$. The bottom block is computed from ground truth only and is not a
-model.}
+$\mathbf{w}$. The three rows below the rule are computed from ground truth only
+and are not models.}
 \label{tab:w}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -1063,24 +1068,24 @@ these.
 the views and the weights}, so their blind-control levels are the only place
 where the two operators are compared on identical data. CBF reaches
 $14.58$\,dB blind while MVDR reaches $12.21$: the MVDR target is intrinsically
-harder, which the constant-image floors confirm ($14.29$ vs $11.38$\,dB on the
-single-element protocol).
+harder, consistent with the constant-image floors of the single-element protocol
+($14.29$ vs $11.38$\,dB).
 
 (ii) \emph{Against the same-position training-weight prior} (a ground-truth
-statistic that uses no model), every $\mathbf{w}$-aware arm loses: $14.55$ vs
-$13.53$\,dB under CBF is the only place a model beats the prior on PSNR, and
-even there it loses badly on LPIPS ($0.386$ vs $0.290$). On MVDR the models lose
-on all three metrics. This is the cross-caliber comparison that matters most,
-because it does not depend on any protocol match: \emph{a simple prior built
-from the training set is still a stronger image than the conditioned model}, and
-that remains true no matter which arm is chosen.
+statistic that uses no model), every $\mathbf{w}$-aware arm loses on LPIPS, and
+under MVDR on all three metrics; under CBF the models do beat the prior on PSNR
+($14.55$ vs $13.53$\,dB) while losing on LPIPS ($0.386$ vs $0.290$). This is the
+cross-caliber comparison that matters most, because it does not depend on any
+protocol match: \emph{a simple prior built from the training set still produces
+the better-looking image}, and that holds for every arm we trained.
 
-(iii) \emph{Against the single-element block}, the array block's higher CBF
-PSNR is not evidence of a better model: the $4\times4$ array concentrates the
-spectrum, which raises every method's level including the floor. We therefore
-compare only margins over each block's own floor, and those are $+1.09$\,dB
-(single-element CBF) and $+0.29$\,dB (array CBF, conditioned)---the array block
-is the weaker of the two on this reading.
+(iii) \emph{Against the single-element block}, the array block's higher
+blind-control PSNR is not evidence of a better model: the $4\times4$ array
+concentrates the spectrum, which raises every level including that of
+ground-truth-only priors. The two blocks also have different priors available
+(constant image vs.\ same-position weight mean), so they cannot be ranked by
+absolute value; what the numbers support is the within-block comparison of each
+table, which is how we read them.
 
 \section{Analysis}
 \label{sec:analysis}
@@ -1090,17 +1095,18 @@ is the weaker of the two on this reading.
 \paragraph{Single-element CBF.} The model is above both per-scene baselines on
 PSNR and SSIM and level on LPIPS with CORF-GS. Two mechanisms explain the
 ordering. The per-scene baselines spend their optimization on one transmitter
-and cannot share anything across transmitters; the amortized model sees 144
-configurations of the same room, so structure that is common to all of them (the
-background, the wall and floor returns, the receiver's field of view) is fitted
-once with 144 times the data. Against CORF-GS specifically, the coupling of
-optical and radio appearance helps the LPIPS tail but not the spectral
-structure, which is where the $0.75$\,dB PSNR margin comes from. The honest
-limit of this reading is the protocol difference of Section~\ref{sec:main}: the
-baselines were not regenerated with the TR\,38.901 element, and the $43.0$\,dB
-probe bounds the error that introduces at $0.005$\,dB, but a full re-run of both
-baselines under the new protocol would be the controlled version of this
-comparison.
+and cannot share anything across transmitters; the amortized model is fitted to
+144 configurations of the same room at once, so structure common to all of them
+(the background, the wall and floor returns, the receiver's field of view) is
+learned once instead of being re-learned per transmitter. Against CORF-GS
+specifically, the coupling of optical and radio appearance closes the perceptual
+gap ($0.403$ against our $0.404$) but not the PSNR gap, which is consistent with
+its gain lying in appearance statistics rather than in spectral structure. The
+honest limit of this reading is the protocol difference of
+Section~\ref{sec:main}: the baselines were not regenerated with the TR\,38.901
+element, and the $43.0$\,dB probe bounds the error that introduces at
+$0.005$\,dB, but a full re-run of both baselines under the new protocol would be
+the controlled version of this comparison.
 
 \paragraph{Held-out positions.} This block is \emph{easier} than the main
 reading ($15.88$ vs $15.38$\,dB) because its orientation and carrier come from
@@ -1113,7 +1119,7 @@ budget sharpens the spectrum's peaks at the expense of its low-contrast
 background---the same trade-off the LPIPS term was introduced to address.
 
 \paragraph{Single-element MVDR.} The absolute level is $1.17$\,dB lower than
-CBF, but the margin over its own floor is $1.7\times$ larger. The mechanism is
+CBF, but the margin over its own floor is $2.6\times$ larger. The mechanism is
 in the target: MVDR's adaptive nulling sharpens peaks and suppresses the
 background, so the constant-image prior (LPIPS $0.506$) is much weaker, while
 the model's relative advantage in placing structure is preserved. That the
@@ -1124,11 +1130,11 @@ property of the operator, not of the method.
 \paragraph{Array with $\mathbf{w}$, CBF.} The conditioned and blind arms are
 indistinguishable, and the in-domain probe says why. We take four weights that
 are \emph{in the training set}, all at the same position, and measure the
-pairwise PSNR between ground-truth images and between model outputs. Ground
-truth differs across those weights by $22.95$\,dB; the model's outputs differ by
-$52.19$\,dB, i.e.\ the model expresses $0.1\,\%$ of the variation it was trained
-on. The blind arm expresses $0.2\,\%$---slightly more, because it does not spend
-capacity trying. A swap probe on held-out weights agrees: replacing the
+pairwise PSNR between ground-truth images and between model outputs. Ground-truth
+images at those weights agree only to $22.95$\,dB pairwise PSNR; the model's
+outputs agree to $52.19$\,dB, i.e.\ it expresses $0.1\,\%$ of the variation it
+was trained on. The blind arm expresses $0.2\,\%$, indistinguishable from the
+conditioned arm within probe noise. A swap probe on held-out weights agrees: replacing the
 instance's weight with a same-position training weight changes the render by a
 pixel PSNR of $46.34$\,dB, which is to say almost nothing. The failure is
 therefore \emph{not} a generalization failure; the model never learned the
@@ -1141,8 +1147,8 @@ blind by $0.50$--$0.65$\,dB. Two effects compound. The weight effect is small in
 the metric that matters: the pooled $u$-domain effect of changing $\mathbf{w}$ is
 an RMSE of $0.093$ ($\approx20.3$\,dB), while the model's base error on this
 data is $0.106$--$0.160$, so the signal is smaller than the error it must be
-seen through. And the head pays for the channel: the rank-2 complex contraction
-diverts capacity from the base render, which is why the conditioned arms lose
+seen through. And the head appears to pay for the channel: the rank-2 complex
+contraction diverts capacity from the base render, which is why the conditioned arms lose
 ground on LPIPS even where their PSNR is close. A blind model is a better
 \emph{image} than a conditioned model even when the conditioned one carries more
 information about $\mathbf{w}$.
@@ -1318,8 +1324,9 @@ forward pass at 15.38\,dB PSNR / 0.764 SSIM / 0.404 LPIPS, and the same
 mechanism holds under a second imaging operator. The same mechanism extends to
 the beamforming weights of an array transmitter, where we find a live but weak
 channel: unseen weights change the rendering, but only by a few percent of the
-true effect, the model does not express even the weights it was trained on, and
-the binding constraints are representation and base fidelity rather than
+true effect, the model does not express even the weights it was trained on
+($0.1\,\%$ of the ground-truth variation under CBF, $20\,\%$ under MVDR), and the
+binding constraints are representation and base fidelity rather than
 generalization. A test-time ladder from $0.396$ to $0.225$ LPIPS shows that the
 remaining gap is the price of amortization, not a limit of the architecture.
 
