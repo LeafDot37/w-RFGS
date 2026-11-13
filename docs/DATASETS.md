@@ -71,7 +71,7 @@ the files. Do not mix the two domains when comparing numbers.
 > depend on any link.
 
 ```
-Release page:  https://github.com/<owner>/w-RFGS/releases/tag/datasets-v1
+Release page:  https://github.com/LeafDot37/w-RFGS/releases/tag/datasets-v1
 Assets:        wrfgs_cbf_params.tar.zst.part-00 … part-NN
                wrfgs_mvdr_w_params.tar.zst.part-00 … part-NN
                SHA256SUMS.txt
@@ -106,7 +106,7 @@ bash scripts/package_datasets.sh --root datasets --out /data/release --split-mb 
 ```
 
 Upload the parts and `SHA256SUMS.txt` as assets of a release tagged `datasets-v1`, then replace
-`<owner>` above (and in the repository README) with the real account name.
+`LeafDot37` above if the repository ever moves.
 
 ---
 

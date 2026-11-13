@@ -130,7 +130,7 @@ w-RFGS inherits its engine from [MVSplat](https://github.com/donydchen/mvsplat) 
 are assumed.
 
 ```bash
-git clone <this-repo> w-RFGS && cd w-RFGS
+git clone https://github.com/LeafDot37/w-RFGS.git && cd w-RFGS
 
 # 1) Python dependencies
 pip install -r requirements.txt
@@ -227,7 +227,7 @@ test-time-adaptation procedure.
 @misc{wrfgs2026,
   title  = {w-RFGS: Feed-Forward Radio Radiance Fields with Transmitter and
             Beamforming-Weight Conditioning},
-  author = {<authors>},
+  author = {LeafDot37},
   year   = {2026},
   note   = {Preprint}
 }
