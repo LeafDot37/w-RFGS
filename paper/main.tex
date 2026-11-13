@@ -57,9 +57,9 @@ worse, although a swap probe shows a live, non-degenerate response
 control). An in-domain probe localizes the failure: the model does not express
 even the weights it was trained on, so the axis is limited by representation
 and base fidelity rather than by generalization. A test-time ladder
-($0.396\rightarrow0.344\rightarrow0.225$ LPIPS) bounds what remains: the head
-and renderer can reach $0.22$, so the gap is amortization, not capacity we
-lack. We report the protocol mismatches that make the external comparisons
+($0.396\rightarrow0.344\rightarrow0.225$ LPIPS, on successively easier
+protocols) bounds what remains: the head and renderer can reach $0.22$, so the
+gap is amortization, not capacity we lack. We report the protocol mismatches that make the external comparisons
 indicative rather than exact, and we state which claims the current evidence
 does not support.
 \end{abstract}
@@ -1158,11 +1158,12 @@ evaluated on views the adapted model has not seen.
 
 \begin{table}[!t]
 \centering
-\caption{Test-time ladder. Rows 1--2 are feed-forward (no target views); row 3
-is transductive---it adapts on 320 randomly drawn views of the target instance
-and is scored on the disjoint remaining 320. Row 4 is an oracle: it trains on
-the very views it is scored on and is an upper bound, not a deliverable.
-Protocols differ by row and are named; LPIPS is the score of record.}
+\caption{Test-time ladder. Rows 1--2 and rows 3--4 are two separate protocols,
+each internally consistent; the delta is read within a protocol pair. Rows 1--2
+are feed-forward (no target views); rows 3--4 adapt on 320 randomly drawn views
+and are scored on the disjoint remaining 320. Row 5 is an oracle: it trains on
+the very views it is scored on and is an upper bound, not a deliverable. LPIPS
+is the score of record.}
 \label{tab:tta}
 \footnotesize
 \setlength{\tabcolsep}{3.2pt}
@@ -1172,7 +1173,10 @@ Setting & Protocol & PSNR$\uparrow$ & SSIM$\uparrow$ & LPIPS$\downarrow$ \\
 \midrule
 Zero-shot, delivery & 53 inst. $\times$ 640 v. & 13.803 & 0.7133 & 0.4325 \\
 $+$ perceptual tail & 53 inst. $\times$ 640 v. & 13.711 & 0.7194 & \textbf{0.3957} \\
+\midrule
+Zero-shot, TTA protocol & 16 inst., held-out 320 v. & 13.913 & 0.7174 & 0.4269 \\
 $+$ 320-view TTA & 16 inst., held-out 320 v. & 16.438 & 0.7704 & 0.3440 \\
+\midrule
 Oracle (in-sample) & 1 inst., all 640 v. & 19.209 & 0.8463 & 0.2247 \\
 \bottomrule
 \end{tabular}
@@ -1182,13 +1186,14 @@ The perceptual tail (row 2) is free: it continues the same checkpoint on the
 same training instances with the LPIPS weight set above its measured
 equal-point, and improves LPIPS on 53/53 instances while giving up $0.09$\,dB
 PSNR. That is the only change in this paper that improves the \emph{delivery}
-reading without target views, and it is what we would ship. Adaptation (row 3)
-buys a further $0.052$ LPIPS for 320 target views and 11\,k steps, on 16
-instances covering all 13 held-out positions, with all three metrics improving
-on 16/16. The gain is $+2.48\pm0.36$\,dB PSNR and $-0.053\pm0.014$ LPIPS, and
-its correlation with zero-shot quality ($r=+0.78$ for LPIPS) says it is
-partly a regression to the mean: the worse the instance starts, the more it
-gains.
+reading without target views, and it is what we would ship. Adaptation (row 4)
+is compared with its own zero-shot baseline (row 3) rather than with row 2: over
+the same 16 instances and the same held-out 320 views, 320 target views and
+11\,k steps buy $+2.48\pm0.36$\,dB PSNR, $+0.049$ SSIM and $-0.083$ LPIPS, with
+all three metrics improving on 16/16. The instances cover all 13 held-out
+positions, and the gain correlates with zero-shot quality ($r=+0.78$ for
+LPIPS), so part of it is regression to the mean: the worse the instance starts,
+the more it gains.
 
 Two cautions make this a diagnostic rather than a solution. Row 3 is
 \emph{transductive}: it is not the amortized model, and its numbers must not be
