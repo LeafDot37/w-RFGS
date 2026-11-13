@@ -1,0 +1,86 @@
+{
+  "scene": "NIST_lobby",
+  "freq_hz": 60000000000.0,
+  "tx_power_dbm": 0.0,
+  "simulator": "sionna-rt 2.2.0",
+  "max_depth": 3,
+  "reflection": "specular only",
+  "diffuse": false,
+  "diffraction": false,
+  "materials": {
+    "custom_plastic": [
+      2.3,
+      0.0,
+      0.05,
+      6
+    ],
+    "custom_leather": [
+      1.8,
+      0.0,
+      0.1,
+      3
+    ],
+    "custom_cloth": [
+      1.8,
+      0.0,
+      0.2,
+      3
+    ],
+    "custom_plasterboard": [
+      2.73,
+      0.0085,
+      0.1,
+      5
+    ],
+    "custom_wood": [
+      1.99,
+      0.0047,
+      0.2,
+      3
+    ],
+    "custom_concrete": [
+      5.24,
+      0.0462,
+      0.1,
+      5
+    ],
+    "custom_metal": [
+      1.0,
+      10000000.0,
+      0.025,
+      10
+    ],
+    "custom_glass": [
+      6.31,
+      0.0036,
+      0.025,
+      10
+    ],
+    "custom_ceiling_board": [
+      1.48,
+      0.0011,
+      0.1,
+      5
+    ],
+    "custom_chipboard": [
+      2.58,
+      0.0217,
+      0.1,
+      5
+    ],
+    "custom_marble": [
+      7.074,
+      0.0055,
+      0.05,
+      10
+    ]
+  },
+  "scattering_multiplier": 4.0,
+  "delta_m": 0.1,
+  "opacity_thr": 0.5,
+  "db_map": {
+    "lo_dbm": -125.0,
+    "hi_dbm": -55.0
+  },
+  "generated": "2026-10-20 00:25"
+}

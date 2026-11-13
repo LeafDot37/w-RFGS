@@ -1,0 +1,12 @@
+# RF-3DGS 阶段一（视觉短训）初始化点云的外部来源
+#
+# 本配置让 RF-3DGS（scene/dataset_readers.py readNerfSyntheticInfo）
+# 直接从 MVSplat 点云仓库读取 init 云，无需把点云写进 blender_visual_dataset/points3d.ply。
+# 每次端到端运行（run_end_to_end.sh 阶段 A）会原地刷新 results/mvsplat_clouds/init.ply，
+# 本文件路径保持不变即可自动指向最新。
+
+# 具体点云路径：绝对路径，或相对本仓库(RF-3DGS)根的相对路径
+point_cloud: /path/to/w-RFGS/results/mvsplat_clouds/init.ply
+
+# 置空则禁用外部点云，退回数据集内 points3d.ply（无则随机 10 万点）
+# point_cloud: ""

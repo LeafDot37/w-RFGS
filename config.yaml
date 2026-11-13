@@ -1,0 +1,102 @@
+# =============================================================================
+# 项目根 config.yaml —— 唯一事实来源（所有超参数 + 所需路径）
+# -----------------------------------------------------------------------------
+# 本项目把两个开源工程当平行依赖：MVSplat（前馈几何 init 云）+ RF-3DGS（3DGS 短训
+# 与 RRF 频谱重建）。R2 起两代码树已按功能并入单 import 根 code/（无来源区分）：
+#   入口脚本 + config/ 在 code/ 根；内核 = code/feedforward（阶段A，原 MVSplat src）
+#   + code/splat（阶段B/C，原 RF-3DGS 平铺模块）。端到端驱动仓库根 run_end_to_end.sh
+#   与评测 evaluate_run.sh 统一从本文件读参。
+#
+# 路径均为 WSL 视图（/mnt/d/...），python 为 WSL mvsplat env（复用）。
+# 两个 profile 的语义：
+#   * smoke —— 极简链路验证（画质低），勿用作正式结果
+#   * full  —— 正式：K16/V4/G2 init(1.5M上限) → 12000 步短训（多档存档供迭代扫描，
+#              视觉 LPIPS 目标优于原版 30000 步的 0.1265）
+#              → RRF 双档：10000RRF 对齐（绝对 22000 = 12000+10000）
+#              与 40000总（绝对 40000，对应原版 40000 刻），评测 4 方法。
+#              评测（evaluate_run.sh）= mvsplat 覆盖度 + 阶段一迭代扫描 + 阶段二
+#              双档三方对比 + 参数量(高斯球数)-质量曲线。
+# =============================================================================
+
+project:
+  name: MVSplat→RF-3DGS 端到端（视觉 3DGS 短训 + RRF 频谱重建）
+  description: >
+    MVSplat 前馈按 位置簇×凝视扇区(K×G) 分组重建 init 点云 → RF-3DGS 视觉短训 →
+    以短训 checkpoint 为 start 做 RRF 频谱重训练 → 每频谱方法独立评测。
+
+paths:
+  root: /path/to/w-RFGS
+  code_root:    /path/to/w-RFGS/code                 # 单 import 根：入口脚本 + config/(hydra) + feedforward/ + splat/ + tools/
+  code_tools:   /path/to/w-RFGS/code/tools           # 本项目自写脚本（诊断/聚合）
+  python:       python   # WSL mvsplat env
+  data_visual:      /path/to/w-RFGS/datasets/RF-3DGS_dataset/blender_visual_dataset      # 阶段一视觉数据(809, test split 161 已就位)
+  data_spectrum:    /path/to/w-RFGS/datasets/RF-3DGS_dataset/training-rf-spectrum         # 阶段二频谱数据(3dgs_{M}_100 子目录)
+  data_orig_visual: /path/to/w-RFGS/datasets/RF-3DGS_dataset/blender_visual_trained       # 原版视觉模型(results.json=原版参考权威源)
+  data_orig_rrf:    /path/to/w-RFGS/datasets/RF-3DGS_dataset/RF-3DGS_trained_RRF          # 原版 RRF 模型(每方法 results.json=原版参考权威源)
+  ckpt_re10k:   /path/to/w-RFGS/checkpoints/re10k.ckpt   # MVSplat re10k 权重
+  clouds:       /path/to/w-RFGS/results/mvsplat_clouds   # 点云仓库(latest/init.ply + archive)
+  results:      /path/to/w-RFGS/results                  # 每次端到端运行 → results/run_<时间戳>/
+
+# 阶段一(阶段B)短训 & 阶段二(阶段C)RRF 的通用设置
+stage_b:
+  resolution: 2              # 视觉短训 render/eval 分辨率档位（800×450）
+stage_c:
+  densify_until_iter: 0      # RRF 阶段冻结几何（0=不剪枝/不增密），与原版匹配预算协议一致
+
+# 分组策略超参默认值（init_cloud.py 读取的 RF_* env 全集；profile 内同名键覆盖此处）
+# 说明：阶段一(阶段A) 用 kmeans(相机位置→K 簇) + 簇内罗盘凝视扇区 top-G 扇区 + 每簇 V 上下文视图
+#       forward；所有下键一一对应脚本里 os.environ/RF_* 读取，勿漏。
+stage_a_defaults: &stage_a_defaults
+  voxel_size: 0.0                 # RF_VOXEL_SIZE         0=由 max_gaussians 自动估体素
+  opacity_threshold: 0.05         # RF_OPACITY_THRESHOLD  过滤 opacity 低于此的高斯
+  max_depth: 15.0                 # RF_MAX_DEPTH          离自属相机超过此距离丢弃(0=关,去 far≈100 黑壳)
+  clusters_limit: 0               # RF_CLUSTERS_LIMIT     只处理前 N 簇(0=全部, 调试用)
+  background: black               # RF_BACKGROUND         black|white（black=与 RF-3DGS 训练一致）
+  near: 1.0                       # RF_NEAR               深度下界(同 re10k 训练)
+  far: 100.0                      # RF_FAR                深度上界(同 re10k 训练)
+  target_frames_per_cluster: 0    # RF_TARGET_FRAMES_PER_CLUSTER  0=不用(RF_NUM_CLUSTERS>0 时忽略；>0 时 K 自动=809/该值)
+
+profiles:
+  smoke:
+    num_clusters: 1               # RF_NUM_CLUSTERS (K) 位置簇数
+    views_per_cluster: 2          # RF_VIEWS_PER_CLUSTER (V) 每簇上下文视图
+    gazes_per_cluster: 1          # RF_GAZES_PER_CLUSTER (G) 每簇凝视扇区数
+    max_gaussians: 500000         # RF_MAX_GAUSSIANS 体素降采样目标上限
+    stage1_iters: 300             # 阶段B 短训绝对迭代（chkpnt + point_cloud 存此）
+    stage1_save_iters: "300"      # 阶段B 存档迭代档位（多档空格分隔；末尾=ITR1 保证末档云）
+    stage2_iters: 500             # 阶段C RRF 绝对末迭代（=300+200 新迭代；评测点）
+    methods: [MPC]                # 频谱方法
+    <<: *stage_a_defaults
+  full:
+    num_clusters: 16
+    views_per_cluster: 4
+    gazes_per_cluster: 2
+    max_gaussians: 1500000
+    stage1_iters: 12000           # 阶段B 短训绝对末迭代（视觉 LPIPS 目标优于原版 30000 步 0.1265）
+    stage1_save_iters: "500 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000 11000 12000"  # 迭代扫描档
+    stage2_iters: 22000           # 10000RRF 对齐档绝对末迭代（=12000+10000 RRF）
+    stage2_total_iters: 40000     # 40000总 档绝对末迭代（对应原版 40000 刻；同一 RRF 续跑存两档）
+    methods: [MPC, CBF, Delay, MVDR]
+    <<: *stage_a_defaults
+  parity:                               # （协议/评测用）复刻原版两段：视觉续训到 30000 → RRF 冻结到绝对 40000
+    stage1_iters: 30000                 # 阶段B 视觉绝对末迭代（=既有 12000 续训至 30000）
+    stage2_iters: 40000                 # 阶段C RRF 绝对末迭代（=30000+RRF10000，同原版 recipe）
+    methods: [MPC, CBF, Delay, MVDR]
+
+eval:
+  enabled: true                   # 开关：评测汇总是否嵌“原版 RF-3DGS”参考
+  mvsplat_coverage:               # 覆盖度评测（4 位置=快速查看/验证视角，transforms_train.json 帧下标）
+    enabled: true
+    cams: [0, 200, 400, 600]      # 与 baseline 覆盖度验证一致
+  # 原版参考值（权威源，勿手改；与 baseline 工作记录/README 数值一致）：
+  #   阶段一 = blender_visual_trained/results.json（ours_30000/ours_7000）
+  #   阶段二 = RF-3DGS_trained_RRF/3dgs_{M}_100/results.json（ours_40000，=原版 30000步视觉+RRF1万）
+  reference:
+    stage1_orig:
+      "30000": { PSNR: 29.041225, SSIM: 0.939872, LPIPS: 0.126511 }
+      "7000":  { PSNR: 29.184195, SSIM: 0.934388, LPIPS: 0.176014 }
+    stage2_orig:
+      MPC:   { PSNR: 15.509570, SSIM: 0.627540, LPIPS: 0.385147 }
+      CBF:   { PSNR: 14.131470, SSIM: 0.723310, LPIPS: 0.445741 }
+      Delay: { PSNR: 17.733257, SSIM: 0.690931, LPIPS: 0.379672 }
+      MVDR:  { PSNR: 16.018793, SSIM: 0.730936, LPIPS: 0.391073 }

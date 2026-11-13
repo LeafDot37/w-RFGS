@@ -1,0 +1,2802 @@
+{
+ "format": "cbf_w_pairs_v1",
+ "base_meta": "datasets/RF-3DGS_mvdr_w_params/meta.json",
+ "note": "为每个训练配置补了同配置、不同 w 的对照实例；id 0..base_max 与基础表逐字相同",
+ "protocol": {
+  "spectrum": "mvdr",
+  "tx_array": [
+   4,
+   4
+  ],
+  "tx_pattern": "tr38901",
+  "polarization": "V",
+  "rx_array_M": 10,
+  "samples_per_src": 1000000,
+  "time_interval_ns": 0.1,
+  "mvdr_loading": 0.01,
+  "material_freq_hz": 60000000000.0,
+  "w_phase_convention": "-j2*pi*(y*sin(t)*sin(p) + z*cos(t)) / sqrt(N)"
+ },
+ "codebook": {
+  "theta_train_deg": [
+   15.0,
+   30.0,
+   60.0,
+   75.0
+  ],
+  "theta_hold_deg": [
+   45.0
+  ],
+  "phi_train_deg": [
+   0.0,
+   30.0,
+   60.0,
+   120.0,
+   150.0,
+   180.0,
+   240.0,
+   270.0,
+   300.0
+  ],
+  "phi_hold_deg": [
+   90.0,
+   210.0,
+   330.0
+  ],
+  "n_train": 37,
+  "n_holdout": 21
+ },
+ "pairing": {
+  "k": 1,
+  "roles": [
+   "train"
+  ],
+  "seed": 0,
+  "base_n": 354,
+  "pair_n": 144
+ },
+ "counts": {
+  "instances": 498,
+  "base_instances": 354,
+  "pair_instances": 144,
+  "views_per_instance": 640
+ },
+ "instances": [
+  {
+   "id": 0,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.6615283092052293,
+   "pitch_abs_rad": 0.8505485891815994,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p120"
+  },
+  {
+   "id": 354,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.6615283092052293,
+   "pitch_abs_rad": 0.8505485891815994,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p000",
+   "pair_of": 0,
+   "pair_index": 1
+  },
+  {
+   "id": 1,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.05066307100721393,
+   "pitch_abs_rad": 0.15241688838386752,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p000"
+  },
+  {
+   "id": 355,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.05066307100721393,
+   "pitch_abs_rad": 0.15241688838386752,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p030",
+   "pair_of": 1,
+   "pair_index": 1
+  },
+  {
+   "id": 2,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.4729357045910849,
+   "pitch_abs_rad": 0.6236557864223364,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p300"
+  },
+  {
+   "id": 356,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.4729357045910849,
+   "pitch_abs_rad": 0.6236557864223364,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p180",
+   "pair_of": 2,
+   "pair_index": 1
+  },
+  {
+   "id": 3,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.0838009427891002,
+   "pitch_abs_rad": 0.37930969114313035,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p300"
+  },
+  {
+   "id": 357,
+   "position_id": 0,
+   "xyz": [
+    0.4341805577278137,
+    -4.378625392913818,
+    0.8367239236831665
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.0838009427891002,
+   "pitch_abs_rad": 0.37930969114313035,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p120",
+   "pair_of": 3,
+   "pair_index": 1
+  },
+  {
+   "id": 4,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 2.5330221584553323,
+   "pitch_abs_rad": -0.15323310258025474,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p240"
+  },
+  {
+   "id": 358,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 2.5330221584553323,
+   "pitch_abs_rad": -0.15323310258025474,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p150",
+   "pair_of": 4,
+   "pair_index": 1
+  },
+  {
+   "id": 5,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 3.1438873966533474,
+   "pitch_abs_rad": -0.38012590533951757,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p240"
+  },
+  {
+   "id": 359,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 3.1438873966533474,
+   "pitch_abs_rad": -0.38012590533951757,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p300",
+   "pair_of": 5,
+   "pair_index": 1
+  },
+  {
+   "id": 6,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.009423382857033,
+   "pitch_abs_rad": 0.0911129926989514,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p240"
+  },
+  {
+   "id": 360,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.009423382857033,
+   "pitch_abs_rad": 0.0911129926989514,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p240",
+   "pair_of": 6,
+   "pair_index": 1
+  },
+  {
+   "id": 7,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.398558144659018,
+   "pitch_abs_rad": 0.3180057954582142,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p030"
+  },
+  {
+   "id": 361,
+   "position_id": 1,
+   "xyz": [
+    8.038309097290039,
+    -10.909658432006836,
+    -0.4406195282936096
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.398558144659018,
+   "pitch_abs_rad": 0.3180057954582142,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p120",
+   "pair_of": 7,
+   "pair_index": 1
+  },
+  {
+   "id": 8,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.5175894770889,
+   "pitch_abs_rad": 0.010878885502769664,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p030"
+  },
+  {
+   "id": 362,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.5175894770889,
+   "pitch_abs_rad": 0.010878885502769664,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p270",
+   "pair_of": 8,
+   "pair_index": 1
+  },
+  {
+   "id": 9,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -3.2629187290832293,
+   "pitch_abs_rad": 0.48211778354123863,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p300"
+  },
+  {
+   "id": 363,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -3.2629187290832293,
+   "pitch_abs_rad": 0.48211778354123863,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p180",
+   "pair_of": 9,
+   "pair_index": 1
+  },
+  {
+   "id": 10,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -2.6520534908852142,
+   "pitch_abs_rad": 0.2552249807819758,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p000"
+  },
+  {
+   "id": 364,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -2.6520534908852142,
+   "pitch_abs_rad": 0.2552249807819758,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p030",
+   "pair_of": 10,
+   "pair_index": 1
+  },
+  {
+   "id": 11,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.128454715286915,
+   "pitch_abs_rad": -0.21601391725649316,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t15_p150"
+  },
+  {
+   "id": 365,
+   "position_id": 2,
+   "xyz": [
+    7.66764497756958,
+    1.0989543199539185,
+    0.8395808935165405
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.128454715286915,
+   "pitch_abs_rad": -0.21601391725649316,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p150",
+   "pair_of": 11,
+   "pair_index": 1
+  },
+  {
+   "id": 12,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.31279229632535066,
+   "pitch_abs_rad": 0.3331694407279752,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p240"
+  },
+  {
+   "id": 366,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.31279229632535066,
+   "pitch_abs_rad": 0.3331694407279752,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p300",
+   "pair_of": 12,
+   "pair_index": 1
+  },
+  {
+   "id": 13,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -0.2980729418726647,
+   "pitch_abs_rad": 0.1062766379687124,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p180"
+  },
+  {
+   "id": 367,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -0.2980729418726647,
+   "pitch_abs_rad": 0.1062766379687124,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p030",
+   "pair_of": 13,
+   "pair_index": 1
+  },
+  {
+   "id": 14,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.4325369556689789,
+   "pitch_abs_rad": -0.13806945731049375,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p120"
+  },
+  {
+   "id": 368,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.4325369556689789,
+   "pitch_abs_rad": -0.13806945731049375,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p030",
+   "pair_of": 14,
+   "pair_index": 1
+  },
+  {
+   "id": 15,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.8216717174709636,
+   "pitch_abs_rad": -0.36496226006975657,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p270"
+  },
+  {
+   "id": 369,
+   "position_id": 4,
+   "xyz": [
+    -4.880208492279053,
+    0.447118878364563,
+    -0.29279109835624695
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.8216717174709636,
+   "pitch_abs_rad": -0.36496226006975657,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p180",
+   "pair_of": 15,
+   "pair_index": 1
+  },
+  {
+   "id": 16,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.414430251105345,
+   "pitch_abs_rad": -0.38928667104319764,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p180"
+  },
+  {
+   "id": 370,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.414430251105345,
+   "pitch_abs_rad": -0.38928667104319764,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p300",
+   "pair_of": 16,
+   "pair_index": 1
+  },
+  {
+   "id": 17,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 1.2799662373090308,
+   "pitch_abs_rad": 0.08195222699527133,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "uniform"
+  },
+  {
+   "id": 371,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 1.2799662373090308,
+   "pitch_abs_rad": 0.08195222699527133,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p120",
+   "pair_of": 17,
+   "pair_index": 1
+  },
+  {
+   "id": 18,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.8035650129073295,
+   "pitch_abs_rad": 0.30884502975453415,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p030"
+  },
+  {
+   "id": 372,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.8035650129073295,
+   "pitch_abs_rad": 0.30884502975453415,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p060",
+   "pair_of": 18,
+   "pair_index": 1
+  },
+  {
+   "id": 19,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.6691009991110154,
+   "pitch_abs_rad": -0.16239386828393482,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p150"
+  },
+  {
+   "id": 373,
+   "position_id": 5,
+   "xyz": [
+    2.0296623706817627,
+    -10.256635665893555,
+    -0.41171690821647644
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.6691009991110154,
+   "pitch_abs_rad": -0.16239386828393482,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p000",
+   "pair_of": 19,
+   "pair_index": 1
+  },
+  {
+   "id": 20,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 2.829088091913583,
+   "pitch_abs_rad": -0.15655447489497726,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p150"
+  },
+  {
+   "id": 374,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 2.829088091913583,
+   "pitch_abs_rad": -0.15655447489497726,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p150",
+   "pair_of": 20,
+   "pair_index": 1
+  },
+  {
+   "id": 21,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 3.352686867511882,
+   "pitch_abs_rad": 0.3146844231434917,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p060"
+  },
+  {
+   "id": 375,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 3.352686867511882,
+   "pitch_abs_rad": 0.3146844231434917,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p180",
+   "pair_of": 21,
+   "pair_index": 1
+  },
+  {
+   "id": 22,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 3.9635521057098972,
+   "pitch_abs_rad": 0.08779162038422889,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p270"
+  },
+  {
+   "id": 376,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 3.9635521057098972,
+   "pitch_abs_rad": 0.08779162038422889,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t15_p240",
+   "pair_of": 22,
+   "pair_index": 1
+  },
+  {
+   "id": 23,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.218222853715568,
+   "pitch_abs_rad": -0.3834472776542401,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p000"
+  },
+  {
+   "id": 377,
+   "position_id": 6,
+   "xyz": [
+    9.38448429107666,
+    -4.361733436584473,
+    -0.40677085518836975
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.218222853715568,
+   "pitch_abs_rad": -0.3834472776542401,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p060",
+   "pair_of": 23,
+   "pair_index": 1
+  },
+  {
+   "id": 24,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.8723251218438729,
+   "pitch_abs_rad": 0.31813179417206,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p300"
+  },
+  {
+   "id": 378,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.8723251218438729,
+   "pitch_abs_rad": 0.31813179417206,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p060",
+   "pair_of": 24,
+   "pair_index": 1
+  },
+  {
+   "id": 25,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.26145988364585754,
+   "pitch_abs_rad": -0.3799999066256718,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p150"
+  },
+  {
+   "id": 379,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.26145988364585754,
+   "pitch_abs_rad": -0.3799999066256718,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p240",
+   "pair_of": 25,
+   "pair_index": 1
+  },
+  {
+   "id": 26,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.2621388919524413,
+   "pitch_abs_rad": -0.15310710386640897,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t15_p300"
+  },
+  {
+   "id": 380,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.2621388919524413,
+   "pitch_abs_rad": -0.15310710386640897,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p000",
+   "pair_of": 26,
+   "pair_index": 1
+  },
+  {
+   "id": 27,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.8730041301504566,
+   "pitch_abs_rad": 0.09123899141279718,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p240"
+  },
+  {
+   "id": 381,
+   "position_id": 8,
+   "xyz": [
+    -4.894274711608887,
+    -4.0001220703125,
+    -0.3796136975288391
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.8730041301504566,
+   "pitch_abs_rad": 0.09123899141279718,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p270",
+   "pair_of": 27,
+   "pair_index": 1
+  },
+  {
+   "id": 28,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 3.3568467489397613,
+   "pitch_abs_rad": -0.15957169505862207,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p270"
+  },
+  {
+   "id": 382,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 3.3568467489397613,
+   "pitch_abs_rad": -0.15957169505862207,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p270",
+   "pair_of": 28,
+   "pair_index": 1
+  },
+  {
+   "id": 29,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.611517496945432,
+   "pitch_abs_rad": 0.06732110770064076,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p030"
+  },
+  {
+   "id": 383,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.611517496945432,
+   "pitch_abs_rad": 0.06732110770064076,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p060",
+   "pair_of": 29,
+   "pair_index": 1
+  },
+  {
+   "id": 30,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.7459815107417462,
+   "pitch_abs_rad": 0.3116672029798469,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p240"
+  },
+  {
+   "id": 384,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.7459815107417462,
+   "pitch_abs_rad": 0.3116672029798469,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p120",
+   "pair_of": 30,
+   "pair_index": 1
+  },
+  {
+   "id": 31,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 2.222382735143447,
+   "pitch_abs_rad": 0.5385600057391098,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t15_p030"
+  },
+  {
+   "id": 385,
+   "position_id": 9,
+   "xyz": [
+    6.1092329025268555,
+    -7.006685256958008,
+    0.784686803817749
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 2.222382735143447,
+   "pitch_abs_rad": 0.5385600057391098,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p150",
+   "pair_of": 31,
+   "pair_index": 1
+  },
+  {
+   "id": 32,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -3.265845023395989,
+   "pitch_abs_rad": 0.3770302332273073,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p270"
+  },
+  {
+   "id": 386,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -3.265845023395989,
+   "pitch_abs_rad": 0.3770302332273073,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p060",
+   "pair_of": 32,
+   "pair_index": 1
+  },
+  {
+   "id": 33,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.6549797851979737,
+   "pitch_abs_rad": -0.09420866481116169,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p120"
+  },
+  {
+   "id": 387,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.6549797851979737,
+   "pitch_abs_rad": -0.09420866481116169,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p060",
+   "pair_of": 33,
+   "pair_index": 1
+  },
+  {
+   "id": 34,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -2.1313810095996746,
+   "pitch_abs_rad": 0.13268413794810113,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p030"
+  },
+  {
+   "id": 388,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -2.1313810095996746,
+   "pitch_abs_rad": 0.13268413794810113,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p300",
+   "pair_of": 34,
+   "pair_index": 1
+  },
+  {
+   "id": 35,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -1.5205157714016595,
+   "pitch_abs_rad": 0.6039230359865702,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p000"
+  },
+  {
+   "id": 389,
+   "position_id": 10,
+   "xyz": [
+    4.140518665313721,
+    -2.206275701522827,
+    0.5261198878288269
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -1.5205157714016595,
+   "pitch_abs_rad": 0.6039230359865702,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p240",
+   "pair_of": 35,
+   "pair_index": 1
+  },
+  {
+   "id": 36,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -0.11205333541454432,
+   "pitch_abs_rad": -0.16491376854899747,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p120"
+  },
+  {
+   "id": 390,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -0.11205333541454432,
+   "pitch_abs_rad": -0.16491376854899747,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p000",
+   "pair_of": 36,
+   "pair_index": 1
+  },
+  {
+   "id": 37,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -1.2465173492108585,
+   "pitch_abs_rad": 0.07943232673020867,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p150"
+  },
+  {
+   "id": 391,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -1.2465173492108585,
+   "pitch_abs_rad": 0.07943232673020867,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p030",
+   "pair_of": 37,
+   "pair_index": 1
+  },
+  {
+   "id": 38,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.49881190278347104,
+   "pitch_abs_rad": 0.3063251294894715,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p030"
+  },
+  {
+   "id": 392,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.49881190278347104,
+   "pitch_abs_rad": 0.3063251294894715,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p180",
+   "pair_of": 38,
+   "pair_index": 1
+  },
+  {
+   "id": 39,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.6356521110128431,
+   "pitch_abs_rad": -0.3918065713082603,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p240"
+  },
+  {
+   "id": 393,
+   "position_id": 12,
+   "xyz": [
+    -2.4815921783447266,
+    -2.156633138656616,
+    -0.3753323256969452
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -0.6356521110128431,
+   "pitch_abs_rad": -0.3918065713082603,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p120",
+   "pair_of": 39,
+   "pair_index": 1
+  },
+  {
+   "id": 40,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.1967374993396618,
+   "pitch_abs_rad": -0.14025006448872818,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p300"
+  },
+  {
+   "id": 394,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -1.1967374993396618,
+   "pitch_abs_rad": -0.14025006448872818,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p150",
+   "pair_of": 40,
+   "pair_index": 1
+  },
+  {
+   "id": 41,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.331201513135976,
+   "pitch_abs_rad": -0.367142867247991,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p240"
+  },
+  {
+   "id": 395,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -2.331201513135976,
+   "pitch_abs_rad": -0.367142867247991,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p300",
+   "pair_of": 41,
+   "pair_index": 1
+  },
+  {
+   "id": 42,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -2.942066751333991,
+   "pitch_abs_rad": 0.10409603079047797,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t15_p120"
+  },
+  {
+   "id": 396,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -2.942066751333991,
+   "pitch_abs_rad": 0.10409603079047797,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p240",
+   "pair_of": 42,
+   "pair_index": 1
+  },
+  {
+   "id": 43,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -1.807602737537677,
+   "pitch_abs_rad": 0.3309888335497408,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p270"
+  },
+  {
+   "id": 397,
+   "position_id": 13,
+   "xyz": [
+    4.684484004974365,
+    0.5442531704902649,
+    -0.2532331347465515
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -1.807602737537677,
+   "pitch_abs_rad": 0.3309888335497408,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p120",
+   "pair_of": 43,
+   "pair_index": 1
+  },
+  {
+   "id": 44,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -3.589658511821708,
+   "pitch_abs_rad": 0.26044663013505015,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p120"
+  },
+  {
+   "id": 398,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -3.589658511821708,
+   "pitch_abs_rad": 0.26044663013505015,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p270",
+   "pair_of": 44,
+   "pair_index": 1
+  },
+  {
+   "id": 45,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -2.455194498025394,
+   "pitch_abs_rad": 0.016100534855844006,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p120"
+  },
+  {
+   "id": 399,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -2.455194498025394,
+   "pitch_abs_rad": 0.016100534855844006,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p180",
+   "pair_of": 45,
+   "pair_index": 1
+  },
+  {
+   "id": 46,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -2.978793273623693,
+   "pitch_abs_rad": 0.487339432894313,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p270"
+  },
+  {
+   "id": 400,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -2.978793273623693,
+   "pitch_abs_rad": 0.487339432894313,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p030",
+   "pair_of": 46,
+   "pair_index": 1
+  },
+  {
+   "id": 47,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -1.8443292598273788,
+   "pitch_abs_rad": -0.21079226790341882,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t15_p150"
+  },
+  {
+   "id": 401,
+   "position_id": 14,
+   "xyz": [
+    7.235353946685791,
+    -1.7263875007629395,
+    0.6075342297554016
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": -1.8443292598273788,
+   "pitch_abs_rad": -0.21079226790341882,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p150",
+   "pair_of": 47,
+   "pair_index": 1
+  },
+  {
+   "id": 48,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.8601939667908594,
+   "pitch_abs_rad": 0.3693575799195727,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p000"
+  },
+  {
+   "id": 402,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.8601939667908594,
+   "pitch_abs_rad": 0.3693575799195727,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p300",
+   "pair_of": 48,
+   "pair_index": 1
+  },
+  {
+   "id": 49,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.249328728592844,
+   "pitch_abs_rad": 0.8405964779580417,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p180"
+  },
+  {
+   "id": 403,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.249328728592844,
+   "pitch_abs_rad": 0.8405964779580417,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p030",
+   "pair_of": 49,
+   "pair_index": 1
+  },
+  {
+   "id": 50,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.9946579805871734,
+   "pitch_abs_rad": 0.14246477716030986,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t15_p300"
+  },
+  {
+   "id": 404,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.9946579805871734,
+   "pitch_abs_rad": 0.14246477716030986,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p030",
+   "pair_of": 50,
+   "pair_index": 1
+  },
+  {
+   "id": 51,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.3837927423891583,
+   "pitch_abs_rad": 0.6137036751987788,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p300"
+  },
+  {
+   "id": 405,
+   "position_id": 16,
+   "xyz": [
+    2.9478445053100586,
+    -5.195637226104736,
+    0.5930742621421814
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.3837927423891583,
+   "pitch_abs_rad": 0.6137036751987788,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p180",
+   "pair_of": 51,
+   "pair_index": 1
+  },
+  {
+   "id": 52,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.8025278871819943,
+   "pitch_abs_rad": -0.35763929032279645,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p150"
+  },
+  {
+   "id": 406,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.8025278871819943,
+   "pitch_abs_rad": -0.35763929032279645,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p300",
+   "pair_of": 52,
+   "pair_index": 1
+  },
+  {
+   "id": 53,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.6680638733856801,
+   "pitch_abs_rad": 0.11359960771567251,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p060"
+  },
+  {
+   "id": 407,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.6680638733856801,
+   "pitch_abs_rad": 0.11359960771567251,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p120",
+   "pair_of": 53,
+   "pair_index": 1
+  },
+  {
+   "id": 54,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.05719863518766477,
+   "pitch_abs_rad": 0.34049241047493534,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p150"
+  },
+  {
+   "id": 408,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.05719863518766477,
+   "pitch_abs_rad": 0.34049241047493534,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p060",
+   "pair_of": 54,
+   "pair_index": 1
+  },
+  {
+   "id": 55,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.191662648983979,
+   "pitch_abs_rad": -0.13074648756353363,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t30_p180"
+  },
+  {
+   "id": 409,
+   "position_id": 17,
+   "xyz": [
+    -2.382229804992676,
+    -10.155449867248535,
+    -0.22560200095176697
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.191662648983979,
+   "pitch_abs_rad": -0.13074648756353363,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p000",
+   "pair_of": 55,
+   "pair_index": 1
+  },
+  {
+   "id": 56,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -0.4535625637953769,
+   "pitch_abs_rad": 0.10365399789907287,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p270"
+  },
+  {
+   "id": 410,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": -0.4535625637953769,
+   "pitch_abs_rad": 0.10365399789907287,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t15_p150",
+   "pair_of": 56,
+   "pair_index": 1
+  },
+  {
+   "id": 57,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.9771613393936758,
+   "pitch_abs_rad": 0.5748928959375419,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p000"
+  },
+  {
+   "id": 411,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": -0.9771613393936758,
+   "pitch_abs_rad": 0.5748928959375419,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p180",
+   "pair_of": 57,
+   "pair_index": 1
+  },
+  {
+   "id": 58,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -1.588026577591691,
+   "pitch_abs_rad": 0.348000093178279,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p060"
+  },
+  {
+   "id": 412,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": -1.588026577591691,
+   "pitch_abs_rad": 0.348000093178279,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t15_p240",
+   "pair_of": 58,
+   "pair_index": 1
+  },
+  {
+   "id": 59,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 0.15730267440263845,
+   "pitch_abs_rad": -0.12323880486018995,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p120"
+  },
+  {
+   "id": 413,
+   "position_id": 18,
+   "xyz": [
+    -0.18022984266281128,
+    -1.9196213483810425,
+    0.568178653717041
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 0.15730267440263845,
+   "pitch_abs_rad": -0.12323880486018995,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p000",
+   "pair_of": 59,
+   "pair_index": 1
+  },
+  {
+   "id": 60,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.6494002308673417,
+   "pitch_abs_rad": -0.10222598984882908,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p300"
+  },
+  {
+   "id": 414,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 2.6494002308673417,
+   "pitch_abs_rad": -0.10222598984882908,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p060",
+   "pair_of": 60,
+   "pair_index": 1
+  },
+  {
+   "id": 61,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.0385349926693266,
+   "pitch_abs_rad": 0.3690129081896399,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t60_p270"
+  },
+  {
+   "id": 415,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.0385349926693266,
+   "pitch_abs_rad": 0.3690129081896399,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p240",
+   "pair_of": 61,
+   "pair_index": 1
+  },
+  {
+   "id": 62,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 3.783864244663656,
+   "pitch_abs_rad": 0.5959057109489028,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p180"
+  },
+  {
+   "id": 416,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 3.783864244663656,
+   "pitch_abs_rad": 0.5959057109489028,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p000",
+   "pair_of": 62,
+   "pair_index": 1
+  },
+  {
+   "id": 63,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 3.172999006465641,
+   "pitch_abs_rad": 0.12466681291043374,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "uniform"
+  },
+  {
+   "id": 417,
+   "position_id": 20,
+   "xyz": [
+    5.428973197937012,
+    -4.752413749694824,
+    0.6730239391326904
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 3.172999006465641,
+   "pitch_abs_rad": 0.12466681291043374,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p270",
+   "pair_of": 63,
+   "pair_index": 1
+  },
+  {
+   "id": 64,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.7401802548731126,
+   "pitch_abs_rad": 0.5289800556097488,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p180"
+  },
+  {
+   "id": 418,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 0.7401802548731126,
+   "pitch_abs_rad": 0.5289800556097488,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t60_p270",
+   "pair_of": 64,
+   "pair_index": 1
+  },
+  {
+   "id": 65,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.351045493071128,
+   "pitch_abs_rad": 0.05774115757127979,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t75_p060"
+  },
+  {
+   "id": 419,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 1.351045493071128,
+   "pitch_abs_rad": 0.05774115757127979,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p120",
+   "pair_of": 65,
+   "pair_index": 1
+  },
+  {
+   "id": 66,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.8746442686694267,
+   "pitch_abs_rad": -0.16915164518798304,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t75_p000"
+  },
+  {
+   "id": 420,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.8746442686694267,
+   "pitch_abs_rad": -0.16915164518798304,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p120",
+   "pair_of": 66,
+   "pair_index": 1
+  },
+  {
+   "id": 67,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.485509506867442,
+   "pitch_abs_rad": 0.30208725285048593,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p060"
+  },
+  {
+   "id": 421,
+   "position_id": 21,
+   "xyz": [
+    2.3868987560272217,
+    -8.168622970581055,
+    0.5995448231697083
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 2.485509506867442,
+   "pitch_abs_rad": 0.30208725285048593,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t75_p150",
+   "pair_of": 67,
+   "pair_index": 1
+  },
+  {
+   "id": 68,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.8519393828765531,
+   "pitch_abs_rad": 0.07836600120927512,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t75_p120"
+  },
+  {
+   "id": 422,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": -0.2617993877991494,
+   "offset_pitch_rad": 0.12217304763960307,
+   "yaw_abs_rad": 0.8519393828765531,
+   "pitch_abs_rad": 0.07836600120927512,
+   "freq_hz": 2100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d0",
+   "w_label": "t30_p270",
+   "pair_of": 68,
+   "pair_index": 1
+  },
+  {
+   "id": 69,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.9864033966728671,
+   "pitch_abs_rad": 0.30525880396853794,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t30_p180"
+  },
+  {
+   "id": 423,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": 0.8726646259971648,
+   "offset_pitch_rad": 0.3490658503988659,
+   "yaw_abs_rad": 1.9864033966728671,
+   "pitch_abs_rad": 0.30525880396853794,
+   "freq_hz": 3100000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d1",
+   "w_label": "t15_p060",
+   "pair_of": 69,
+   "pair_index": 1
+  },
+  {
+   "id": 70,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.3755381584748518,
+   "pitch_abs_rad": -0.39287289682919385,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t30_p270"
+  },
+  {
+   "id": 424,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": 0.2617993877991494,
+   "offset_pitch_rad": -0.3490658503988659,
+   "yaw_abs_rad": 1.3755381584748518,
+   "pitch_abs_rad": -0.39287289682919385,
+   "freq_hz": 2600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d2",
+   "w_label": "t60_p300",
+   "pair_of": 70,
+   "pair_index": 1
+  },
+  {
+   "id": 71,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.24107414467853772,
+   "pitch_abs_rad": -0.16598009406993103,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t15_p060"
+  },
+  {
+   "id": 425,
+   "position_id": 22,
+   "xyz": [
+    -0.34469074010849,
+    -9.195270538330078,
+    -0.4136325716972351
+   ],
+   "offset_yaw_rad": -0.8726646259971648,
+   "offset_pitch_rad": -0.12217304763960307,
+   "yaw_abs_rad": 0.24107414467853772,
+   "pitch_abs_rad": -0.16598009406993103,
+   "freq_hz": 3600000000.0,
+   "role": "train",
+   "views": "test",
+   "label": "d3",
+   "w_label": "t60_p240",
+   "pair_of": 71,
+   "pair_index": 1
+  }
+ ]
+}

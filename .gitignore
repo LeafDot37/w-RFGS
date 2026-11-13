@@ -1,0 +1,35 @@
+# data / artefacts (distributed separately — see docs/DATASETS.md)
+datasets/
+results/
+checkpoints/
+final/
+outputs/
+*.ckpt
+*.pth
+*.ply
+*.npy
+
+# build / cache
+__pycache__/
+*.py[cod]
+.so
+build/
+dist/
+*.egg-info/
+.eggs/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# LaTeX build products (sources and figures are tracked)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.pdf
+!paper/figs/*.pdf
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,5 @@
+# WSL bash 直接执行 *.sh，行尾必须 LF（覆盖 core.autocrlf 的 CRLF 检出）
+*.sh text eol=lf
+
+# 本文件自身也保持 LF（CRLF 会破坏属性行解析）
+.gitattributes text eol=lf
