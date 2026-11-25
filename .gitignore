@@ -1,6 +1,5 @@
 # data / artefacts (distributed separately — see docs/DATASETS.md)
 datasets/
-results/
 checkpoints/
 final/
 outputs/
@@ -8,6 +7,13 @@ outputs/
 *.pth
 *.ply
 *.npy
+
+# results: only the curated headline folders are tracked
+results/*
+!results/main_cross_tx/
+!results/diffuse/
+!results/cross_scene/
+!results/system/
 
 # build / cache
 __pycache__/
@@ -20,14 +26,14 @@ dist/
 .ipynb_checkpoints/
 .pytest_cache/
 
-# LaTeX build products (sources and figures are tracked)
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.pdf
-!paper/figs/*.pdf
+# LaTeX sources and build products are not part of this repository
+latex/
+paper/
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
 
 # editors / OS
 .DS_Store

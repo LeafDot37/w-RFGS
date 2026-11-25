@@ -36,9 +36,14 @@ datasets/
 │   ├── instances.json               #   instance table (position, yaw, pitch, freq, role)
 │   └── spectra/tx000 … tx317/       #   640 or 3,200 PNGs per instance
 ├── RF-3DGS_mvdr_params/             # same scenario, regularized MVDR operator
-└── RF-3DGS_mvdr_w_params/           # ★ beamforming-weight dataset (w table)
-    ├── meta.json / instances.json
-    └── spectra/inst000 … inst353/
+├── RF-3DGS_mvdr_w_params/           # ★ beamforming-weight dataset (w table)
+│   ├── meta.json / instances.json
+│   └── spectra/inst000 … inst353/
+├── RF-3DGS_diffuse_subset/          # diffuse study (60 instances x 64 views)
+│   ├── inst000 … inst059/           #   8-bit CBF images
+│   └── inst000/cir.npz …            #   complex CIR labels (v<view>_h)
+└── _cir_train/                      # complex CIR labels for the 144 training instances
+    └── inst000.npz … inst143.npz
 ```
 
 `RF-3DGS_dataset` is the upstream release of [RF-3DGS](https://github.com/SunLab-UGA/RF-3DGS)
@@ -74,6 +79,8 @@ the files. Do not mix the two domains when comparing numbers.
 Release page:  https://github.com/LeafDot37/w-RFGS/releases/tag/datasets-v1
 Assets:        wrfgs_cbf_params.tar.zst.part-00 … part-NN
                wrfgs_mvdr_w_params.tar.zst.part-00 … part-NN
+               wrfgs_diffuse_subset.tar.zst.part-00 … part-NN
+               wrfgs_cir_train.tar.zst.part-00 … part-NN
                SHA256SUMS.txt
 ```
 
@@ -177,3 +184,22 @@ python code/tools/check_param_data.py \
 checks instance table ↔ image count (3,200 for `train`, 640 otherwise), image size, and the LUT
 range of every file; it also reports the pairwise PSNR between two instances that share a
 position but differ only in one parameter, which must be far below the re-render noise floor.
+
+### Diffuse subset and CIR labels
+
+The diffuse subset is generated from the same instance table with the diffuse/diffraction
+channels enabled:
+
+```bash
+python code/sim/gen_cbf_params.py \
+  --instances datasets_meta/mvdr_w_params/meta.json \
+  --out datasets/RF-3DGS_diffuse_subset \
+  --ids 0 6 12 18 24 30 36 42 48 54 60 66 72 78 84 90 96 102 108 114 120 126 132 138 \
+        144 152 160 168 176 184 196 202 208 214 220 226 232 238 244 250 256 262 \
+        268 274 280 286 292 298 304 306 308 310 312 314 318 319 320 321 322 323 \
+  --views test --views_limit 64 --tx_rows 4 --tx_cols 4 --w_from_instance \
+  --diffuse 1 --diffraction 1 --export_cir 1 --max_depth 1 --samples 1e6
+```
+
+`wrfgs_cir_train` contains the same `--export_cir` output for the 144 training instances and is
+what `train_csi_cbf.py --cir_root` reads (one `cir.npz` per instance, key `v<view>_h`).

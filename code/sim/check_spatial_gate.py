@@ -31,7 +31,7 @@ if _CODE not in sys.path:
 
 from corf.spatial_data import SpatialScene, CLOUD_OPACITY_LOGIT   # noqa: E402
 from splat.color_scalar import apply_jet, make_jet_lut            # noqa: E402
-from train_student import _Pipe                                    # noqa: E402
+from rfgs.coupled.train_student import _Pipe                                    # noqa: E402
 
 
 def log(msg):

@@ -13,7 +13,7 @@
     A_p = | Σ_n conj(w_n) · c_{p,n} |          （取模，**不平方**）
     u   = (render(A) − min) / (max − min)       （渲染后、可见像素上的 min-max）
 
-这个形式不是近似：`code/tools/_chk_w_fold.py` 已在真值上验成恒等式
+这个形式不是近似：`code/tools/archive/_chk_w_fold.py` 已在真值上验成恒等式
 （最大相对误差 8.6e-07）。所以 w 不再是网络要学的函数，而是一个**解析算子**；
 网络只负责与 w 无关的逐阵元场 c_n。
 
@@ -78,7 +78,7 @@ class TxFoldColorHead(TxScalarColorHead):
                  init_u: float = 0.5, n_ant: int = 16,
                  c_init: float = 0.3, a_init: float = 0.01,
                  norm: str = "minmax", post_norm: str = "none",
-                 eps_norm: float = 1e-8):
+                 eps_norm: float = 1e-8, use_geom: bool = False):
         super().__init__(
             embed_dim=embed_dim, hidden=hidden, depth=depth,
             pe_xyz_L=pe_xyz_L, pe_dir_L=pe_dir_L, pe_rel_L=pe_rel_L,
@@ -96,6 +96,8 @@ class TxFoldColorHead(TxScalarColorHead):
         for _nm, _v in (("norm", norm), ("post_norm", post_norm)):
             if _v not in ("minmax", "none"):
                 raise ValueError(f"{_nm} 须 ∈ {{'minmax','none'}}，收到 {_v!r}")
+        if use_geom:
+            raise ValueError("该头不支持 use_geom（几何块只接在基础/复值二次型头上）")
         self.head_type = HEAD_TYPE
         self.n_ant = n_ant
         self.c_init = float(c_init)

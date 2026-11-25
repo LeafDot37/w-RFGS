@@ -16,7 +16,7 @@
 跑法：
     python code/sim/gen_sionna_field.py --mode smoke
     python code/sim/gen_sionna_field.py --mode calib
-    python code/sim/gen_sionna_field.py --mode gen --out /path/to/w-RFGS/datasets/SionnaRoom
+    python code/sim/gen_sionna_field.py --mode gen --out /d/GS3D/mvsplat/datasets/SionnaRoom
 """
 from __future__ import annotations
 
@@ -470,7 +470,7 @@ def mode_gen(rt, room, out, n_tx, spacing, furniture, max_depth, rng_seed,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=("calib", "smoke", "gen"), default="smoke")
-    ap.add_argument("--out", default="/path/to/w-RFGS/datasets/SionnaRoom")
+    ap.add_argument("--out", default="D:/GS3D/mvsplat/datasets/SionnaRoom")
     ap.add_argument("--n_tx", type=int, default=200)
     ap.add_argument("--spacing", type=float, default=0.05)
     ap.add_argument("--furniture", type=int, default=0)

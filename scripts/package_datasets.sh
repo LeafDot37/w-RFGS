@@ -19,7 +19,7 @@ ROOT="datasets"
 OUT="dist"
 SPLIT_MB=1900
 CODEC="zstd"
-DATASETS="RF-3DGS_cbf_params RF-3DGS_mvdr_w_params RF-3DGS_mvdr_params RF-3DGS_cbf_w_pairs"
+DATASETS="RF-3DGS_cbf_params RF-3DGS_mvdr_w_params RF-3DGS_mvdr_params RF-3DGS_cbf_w_pairs RF-3DGS_diffuse_subset _cir_train"
 
 while [ $# -gt 0 ]; do
   case "$1" in

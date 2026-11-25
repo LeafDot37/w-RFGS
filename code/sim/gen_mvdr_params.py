@@ -167,26 +167,34 @@ def _rss_mb():
     return p.WorkingSetSize / 2 ** 20
 
 
-def _post_one(mapper, prep, G, track_cond, png_path):
+def _post_one(mapper, prep, G, track_cond, png_path, save_scale=False, vid=None):
     """单张图的后处理：合并 → R → loading → cholesky → 三角解 → 归一化 → 存盘。
 
     纯 numpy/scipy，不碰 DrJit，所以可以在 worker 线程里跑；与主线程的下一组
-    solve+prepare 重叠。返回 (u8, cond, png_path) 交给主线程统计。
+    solve+prepare 重叠。返回 (u8, cond, png_path, scale) 交给主线程统计；
+    `scale` 仅在 `save_scale=True` 时非空，记录归一化**前**的 min/max/mean
+    （问题 1/3：逐图 min-max 抹掉的就是这个量级）。
     """
     sp_ = mapper.apply(prep, G, track_cond=track_cond)
     u8 = np.round(normalize_spectrum(sp_) * 255).astype(np.uint8)
     if png_path is not None:
         _atomic_save_png(u8, png_path)
-    return u8, prep.get("cond"), png_path
+    scale = None
+    if save_scale:
+        scale = (None if vid is None else int(vid),
+                 float(np.min(sp_)), float(np.max(sp_)), float(np.mean(sp_)))
+    return u8, prep.get("cond"), png_path, scale
 
 
-def _flush(pending, stats, conds):
+def _flush(pending, stats, conds, scale_rows=None):
     """收掉已经提交的后处理：拿返回值做统计，然后清空队列。"""
     for fut in pending:
-        u8, cd, _ = fut.result()
+        u8, cd, _, sc = fut.result()
         stats.append(image_stats(u8))
         if cd is not None:
             conds.append(cd)
+        if scale_rows is not None and sc is not None:
+            scale_rows.append(sc)
     pending.clear()
 
 
@@ -254,6 +262,9 @@ def main():
     ap.add_argument("--tx_power_dbm", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--skip_existing", action="store_true")
+    ap.add_argument("--save_scale", action="store_true",
+                    help="顺带导出逐图归一化前的 min/max/mean 到 scales_instXXX.jsonl"
+                         "（问题 1/3：跨 w 的共同量级、EBA 的 pmax 都靠它）")
     ap.add_argument("--jobs", type=int, default=0,
                     help="后处理线程数；0=主线程内联（默认，唯一不漏内存的配置）")
     ap.add_argument("--pipeline", type=int, default=1,
@@ -388,6 +399,7 @@ def main():
         stats = []
         valid_frac = []
         conds = []
+        scale_rows = []          # 仅 --save_scale：被 min-max 抹掉的原始量级
         for gi, ids_g in enumerate(groups):
             todo = ids_g
             if args.skip_existing and not args.bench:
@@ -442,11 +454,13 @@ def main():
                     # 内联：后处理在主线程跑完再进下一组
                     from concurrent.futures import Future
                     f = Future()
-                    f.set_result(_post_one(mapper, preps[k], Gs[k], k == 0, png))
+                    f.set_result(_post_one(mapper, preps[k], Gs[k], k == 0, png,
+                                           args.save_scale, todo[k]))
                     pending.append(f)
                 else:
                     pending.append(pool.submit(_post_one, mapper, preps[k], Gs[k],
-                                               k == 0, png))
+                                               k == 0, png,
+                                               args.save_scale, todo[k]))
             del preps, Gs, paths
             # 每组都会留下**引用环**（Sionna 的 paths/receiver 与场景互相引用），
             # 环里的 Dr.Jit 张量只有在 gc 回收该环时才释放；进程跑长以后分代回收
@@ -461,7 +475,7 @@ def main():
                 sc.remove(nm)
             if args.bench or not args.pipeline or pool is None:
                 # bench 要逐组打印 cond；没有线程池或流水线时也就没有可重叠的东西
-                _flush(pending, stats, conds)
+                _flush(pending, stats, conds, scale_rows)
             if os.environ.get("MVDR_GPU_LOG") and gi % 5 == 0:
                 import subprocess
                 u = subprocess.run(["nvidia-smi", "--query-gpu=memory.used",
@@ -480,9 +494,18 @@ def main():
             if args.limit and n_inst >= args.limit:
                 break
 
-        _flush(pending, stats, conds)     # 本实例最后一组
+        _flush(pending, stats, conds, scale_rows)     # 本实例最后一组
         sc.remove("tx")
         n_done += n_inst
+
+        if args.save_scale and scale_rows and not args.bench:
+            # 每实例一个 JSONL：view 序号 + 归一化前的 min/max/mean（与 CBF 生成器
+            # `gen_cbf_params.py --save_scale` 同格式，方便同一套读表脚本处理）
+            sp_path = out_root / f"scales_inst{iid:03d}.jsonl"
+            with open(sp_path, "w", encoding="utf-8") as fh:
+                for v_, pmin_, pmax_, pmean_ in scale_rows:
+                    fh.write(json.dumps({"view": v_, "pmin": pmin_,
+                                         "pmax": pmax_, "pmean": pmean_}) + "\n")
 
         if not args.bench:
             n_on_disk = len(list(idir.glob("*.png")))
@@ -511,8 +534,9 @@ def main():
             print(f"[mvdr] 已达 --max_instances {args.max_instances}，退出（外层重启续跑）",
                   flush=True)
             break
-        if args.limit and n_inst >= args.limit:
-            break
+        # 注意：`--limit` 是**每实例**的截断（内层 group 循环里已经 break），
+        # 这里不能再 break 整个实例循环 —— 否则 `--ids 0 317 318` 只会产出
+        # 第一个实例（2026-11-16 A0 波束扫描踩过：317/318 的 scales 文件根本没生成）。
 
     if pool is not None:
         pool.shutdown()

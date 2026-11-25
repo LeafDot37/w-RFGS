@@ -202,11 +202,22 @@ def main():
     ap.add_argument("--mat_freq", type=float, default=60e9)
     ap.add_argument("--max_depth", type=int, default=1)
     ap.add_argument("--samples", type=float, default=1e6)
+    ap.add_argument("--diffuse", type=int, default=-1,
+                    help="-1=用 PROTOCOL；1/0=强制漫散射开/关（RF-3DGS 口径为 1）")
+    ap.add_argument("--diffraction", type=int, default=0,
+                    help="1=开衍射（RF-3DGS 教程口径为 1）")
+    ap.add_argument("--export_cir", type=int, default=0,
+                    help="1=每视角额外存聚合 CIR [100,256] 到 instXXX/cir.npz")
     ap.add_argument("--width", type=int, default=300)
     ap.add_argument("--height", type=int, default=200)
     ap.add_argument("--tx_power_dbm", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--skip_existing", action="store_true")
+    ap.add_argument("--scales_only", action="store_true",
+                    help="只算并写 scales_*.jsonl，不落 PNG（绝对尺度监督用）")
+    ap.add_argument("--save_scale", action="store_true",
+                    help="顺带导出逐图归一化前的 min/max/mean 到 scales_instXXX.jsonl"
+                         "（供尺度头监督，见 docs 里的问题 1）")
     ap.add_argument("--bench", type=int, default=0, help="只跑前 N 个位置组，不落盘")
     ap.add_argument("--limit", type=int, default=0, help="每实例最多 N 张（调试）")
     ap.add_argument("--views_limit", type=int, default=0,
@@ -217,6 +228,10 @@ def main():
     ap.add_argument("--w_from_instance", action="store_true",
                     help="按实例的 w_label 用波束权 w 合成（4×4 发射阵）。"
                          "实例缺 w_label 直接报错，不静默回退")
+    ap.add_argument("--w_vector", default="",
+                    help="32 个逗号分隔实数：前 16 个 Re、后 16 个 Im，直接指定 w（覆盖 w_label）")
+    ap.add_argument("--w_vectors_json", default="",
+                    help="JSON: {view_id: [32 floats]}；逐视角指定 w（优先于 --w_vector）")
     ap.add_argument("--dry_run", action="store_true", help="只打印实例与视角数，不加载场景")
     args = ap.parse_args()
 
@@ -291,6 +306,8 @@ def main():
             "tx_array": [int(inst.get("tx_rows", args.tx_rows)),
                          int(inst.get("tx_cols", args.tx_cols))],
             "w_label": w_label,
+            "diffuse": (PROTOCOL["diffuse"] if args.diffuse < 0 else bool(args.diffuse)),
+            "diffraction": bool(args.diffraction),
         })
         if args.skip_existing and not args.bench and gpath.exists():
             old = json.loads(gpath.read_text(encoding="utf-8"))
@@ -322,7 +339,14 @@ def main():
 
         w_vec = None
         if w_label:
-            w_vec = w_codebook.vector_for(str(w_label), nr, nc)
+            if args.w_vector:
+                _vals = [float(x) for x in args.w_vector.split(",")]
+                if len(_vals) != 32:
+                    raise SystemExit("--w_vector 需要 32 个数（16 Re + 16 Im）")
+                w_vec = np.asarray(_vals[:16], np.float64) + 1j * np.asarray(_vals[16:], np.float64)
+                w_label = "custom"
+            else:
+                w_vec = w_codebook.vector_for(str(w_label), nr, nc)
             if nr * nc == 1:
                 raise SystemExit("--w_from_instance 但发射阵是 1×1：w 无处施加")
 
@@ -330,6 +354,8 @@ def main():
         n_inst = 0
         stats = []
         valid_frac = []
+        scale_rows = []          # 仅 --save_scale：被 min-max 抹掉的原始量级
+        cir_blob, cir_views = {}, []   # 仅 --export_cir
         for gi, ids_g in enumerate(groups):
             todo = ids_g
             if args.skip_existing and not args.bench:
@@ -344,28 +370,53 @@ def main():
                                    orientation=np.array([ang, 0, 0], np.float32)))
                 names.append(nm)
             t0 = time.time()
+            _diff = PROTOCOL["diffuse"] if args.diffuse < 0 else bool(args.diffuse)
             paths = solver(sc, max_depth=args.max_depth, los=True,
                            specular_reflection=True,
-                           diffuse_reflection=PROTOCOL["diffuse"],
-                           refraction=False, diffraction=False,
-                           edge_diffraction=False,
+                           diffuse_reflection=_diff,
+                           refraction=False,
+                           diffraction=bool(args.diffraction),
+                           edge_diffraction=bool(args.diffraction),
                            samples_per_src=int(args.samples),
                            synthetic_array=True, seed=args.seed)
             t1 = time.time()
             pv = np.asarray(paths.valid)
             if pv.size:
                 valid_frac.append(float(pv.mean()))
+            w_by_view = None
+            if args.w_vectors_json:
+                _m = json.load(open(args.w_vectors_json, encoding="utf-8"))
+                w_by_view = {int(kk): (np.asarray(vv[:16], np.float64)
+                                       + 1j * np.asarray(vv[16:], np.float64))
+                             for kk, vv in _m.items()}
             for k, i in enumerate(todo):
                 # w 不能走 `mapper(paths, rx=k)`：那条路把 tx-ant 轴切成 0，
                 # 4×4 阵下 w 会被静默丢掉，图与 uniform 逐位相同。
-                if w_vec is None:
+                _w = w_by_view.get(int(i), w_vec) if w_by_view is not None else w_vec
+                _awt = None
+                if _w is None:
                     sp_ = mapper(paths, rx=k)
                 else:
-                    sp_ = mapper.from_response(*_aw_with_w(paths, k, w_vec))
+                    _awt = _aw_with_w(paths, k, _w)
+                    sp_ = mapper.from_response(*_awt)
+                if args.export_cir and _awt is not None:
+                    _aw, _tau, _val = _awt
+                    if _val is None:
+                        _val = np.ones(_tau.shape, bool)
+                    _tap = np.clip(np.floor(_tau[_val] / 0.5).astype(np.int64), 0, 255)
+                    _h = np.zeros((_aw.shape[0], 256), np.complex64)
+                    np.add.at(_h, (slice(None), _tap), _aw[:, _val])
+                    cir_blob[f"v{i:05d}_h"] = _h
+                    cir_views.append(int(i))
                 u = normalize_spectrum(sp_)
                 u8 = np.round(u * 255).astype(np.uint8)
-                if not args.bench:
+                if not args.bench and not args.scales_only:
                     _atomic_save_png(u8, idir / f"{i:05d}.png")
+                if args.save_scale:
+                    # 逐图 min-max 会抹掉绝对量级；这里把被抹掉的量单独记下来，
+                    # 供尺度头（问题 1）监督：sp_ 是归一化前的原始谱。
+                    scale_rows.append((int(i), float(np.min(sp_)),
+                                       float(np.max(sp_)), float(np.mean(sp_))))
                 stats.append(image_stats(u8))
             n_inst += len(todo)
             for nm in names:
@@ -384,7 +435,19 @@ def main():
         sc.remove("tx")
         n_done += n_inst
 
-        if not args.bench:
+        if args.export_cir and cir_blob:
+            cir_blob["views"] = np.asarray(sorted(set(cir_views)), np.int32)
+            np.savez_compressed(idir / "cir.npz", **cir_blob)
+
+        if args.save_scale and scale_rows:
+            # 每实例一个 JSONL：view 序号 + 归一化前的 min/max/mean（线性功率量纲）
+            sp_path = out_root / f"scales_inst{iid:03d}.jsonl"
+            with open(sp_path, "w", encoding="utf-8") as fh:
+                for v_, pmin_, pmax_, pmean_ in scale_rows:
+                    fh.write(json.dumps({"view": v_, "pmin": pmin_,
+                                         "pmax": pmax_, "pmean": pmean_}) + "\n")
+
+        if not args.bench and not args.scales_only:
             n_on_disk = len(list(idir.glob("*.png")))
             agg = {k: float(np.mean([s[k] for s in stats])) for k in
                    ("mean_u", "std_u", "sat0", "sat1")} if stats else {}
@@ -397,6 +460,8 @@ def main():
                 "pre_freq_hz": (float(pre) if pre is not None else None),
                 "tx_pattern": pattern, "tx_rows": nr, "tx_cols": nc,
                 "w_label": w_label,
+                "diffuse": (PROTOCOL["diffuse"] if args.diffuse < 0 else bool(args.diffuse)),
+                "diffraction": bool(args.diffraction),
                 "n_images": n_on_disk, "n_expected": n_expect,
                 "complete": n_on_disk == n_expect,
                 "image_stats": agg,

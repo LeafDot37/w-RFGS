@@ -1,0 +1,41 @@
+{
+ "protocol": "six synthetic rooms, leave-one-room-out, 24 test views per room",
+ "zero_shot": {
+  "psnr": 17.5,
+  "psnr_std": 2.02,
+  "ssim": 0.775,
+  "lpips": 0.311
+ },
+ "scratch": {
+  "k4": [
+   15.63,
+   1.96
+  ],
+  "k8": [
+   16.57,
+   2.13
+  ],
+  "k16": [
+   16.94,
+   2.16
+  ]
+ },
+ "free_few_shot": {
+  "k4": [
+   16.15,
+   1.76
+  ],
+  "k8": [
+   16.58,
+   2.12
+  ],
+  "k16": [
+   16.87,
+   2.29
+  ]
+ },
+ "direct_path_ablation": {
+  "without": 13.35,
+  "with": 16.8
+ }
+}

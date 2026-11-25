@@ -61,16 +61,20 @@ class TxCoherentColorHead(TxScalarColorHead):
                  use_tx_orient: bool = False, use_tx_local_dir: bool = False,
                  use_tx_freq: bool = False,
                  freq_lo_hz: float = 2.0e9, freq_hi_hz: float = 4.5e9,
-                 init_u: float = 0.5, n_ant: int = 16, use_af: bool = False):
+                 init_u: float = 0.5, n_ant: int = 16, use_af: bool = False,
+                 use_geom: bool = False, use_tx_w: bool = False,
+                 use_tx_w_complex: bool = False):
         super().__init__(
             embed_dim=embed_dim, hidden=hidden, depth=depth,
             pe_xyz_L=pe_xyz_L, pe_dir_L=pe_dir_L, pe_rel_L=pe_rel_L,
             pe_tx_L=pe_tx_L, use_dist=use_dist, use_rel=use_rel, use_tx=use_tx,
             use_yaw=use_yaw, use_tx_orient=use_tx_orient,
             use_tx_local_dir=use_tx_local_dir, use_tx_freq=use_tx_freq,
-            use_tx_w=False,                       # w 只走解析阵列因子（复数）
+            use_tx_w=bool(use_tx_w),              # A1 臂：w 方向进头
+            use_tx_w_complex=bool(use_tx_w_complex),  # A2 臂：16 复权进头
             freq_lo_hz=freq_lo_hz, freq_hi_hz=freq_hi_hz,
-            init_u=init_u, n_bands=2, band_mix="coh")
+            init_u=init_u, n_bands=2, band_mix="coh",
+            use_geom=bool(use_geom))
         n_ant = int(n_ant)
         if use_af:
             from splat.color_scalar_af import element_positions
@@ -96,11 +100,11 @@ class TxCoherentColorHead(TxScalarColorHead):
                 xyz: torch.Tensor, dist: torch.Tensor = None,
                 tx: torch.Tensor = None, yaw: torch.Tensor = None,
                 tx_yaw=None, tx_pitch=None, tx_freq=None,
-                tx_rot=None, tx_w=None) -> torch.Tensor:
+                tx_rot=None, tx_w=None, normal=None, aniso=None) -> torch.Tensor:
         """→ (P,2) **原始 logit**：(Re, Im)。不出 sigmoid（见模块头）。"""
         x = self._features(embed, dirv, xyz, dist=dist, tx=tx, yaw=yaw,
                            tx_yaw=tx_yaw, tx_pitch=tx_pitch, tx_freq=tx_freq,
-                           tx_rot=tx_rot, tx_w=None)
+                           tx_rot=tx_rot, tx_w=tx_w, normal=normal, aniso=aniso)
         return self.out(self.net(x))
 
     # ------------------------------------------------------------------ #
@@ -119,7 +123,9 @@ class TxCoherentColorHead(TxScalarColorHead):
             freq_lo_hz=cfg.get("freq_lo_hz", 2.0e9),
             freq_hi_hz=cfg.get("freq_hi_hz", 4.5e9),
             init_u=cfg["init_u"], n_ant=cfg.get("n_ant", 16),
-            use_af=cfg.get("use_af", False))
+            use_af=cfg.get("use_af", False), use_tx_w=cfg.get("use_tx_w", False),
+            use_tx_w_complex=cfg.get("use_tx_w_complex", False),
+            use_geom=cfg.get("use_geom", False))
         h.xyz_center = None if cfg.get("xyz_center") is None else tuple(cfg["xyz_center"])
         h.xyz_scale = float(cfg.get("xyz_scale", 0.0))
         return h

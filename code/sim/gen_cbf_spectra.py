@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """按 RF-3DGS 原口径，为 NIST lobby 的指定发射源批量生成 CBF 角域谱图。
 
-口径（全部取自教程 notebook，已由 `code/tools/repro_cbf_gate.py` 验证）：
+口径（全部取自教程 notebook，已由 `code/tools/archive/repro_cbf_gate.py` 验证）：
   * 频率 2.4 GHz（教程 cell 107 在 CBF 生成前显式设置）；
   * **教程原样材质**，不做任何改写；
   * RX = 作者 `images.txt` 里的 800 个位置 × 4 个阵列 yaw（−90/0/+90/180°）；

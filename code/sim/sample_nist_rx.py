@@ -2,7 +2,7 @@
 """在 NIST 数据集点云的自由空间里采样接收位姿候选（只依赖点云，不需要 Sionna）。
 
 场只与 (点云, TX) 有关，接收位姿只用于评测渲染 ⇒ 换一批评测位姿不必重跑仿真。
-输出的位置交给 `code/tools/select_nist_rx.py` 做「6 个朝向都有几何」筛选。
+输出的位置交给 `code/tools/archive/select_nist_rx.py` 做「6 个朝向都有几何」筛选。
 
 用法：
     python code/sim/sample_nist_rx.py --data_root datasets/NIST_lobby_spatial \

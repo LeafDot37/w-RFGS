@@ -80,6 +80,7 @@ class TxComplexColorHead(TxScalarColorHead):
                  use_tx: bool = True, use_yaw: bool = False,
                  use_tx_orient: bool = False, use_tx_local_dir: bool = False,
                  use_tx_freq: bool = False,
+                 use_geom: bool = False,
                  freq_lo_hz: float = 2.0e9, freq_hi_hz: float = 4.5e9,
                  init_u: float = 0.5,
                  n_ant: int = 16, n_pos: int = 1, n_neg: int = 1,
@@ -90,6 +91,7 @@ class TxComplexColorHead(TxScalarColorHead):
             pe_tx_L=pe_tx_L, use_dist=use_dist, use_rel=use_rel, use_tx=use_tx,
             use_yaw=use_yaw, use_tx_orient=use_tx_orient,
             use_tx_local_dir=use_tx_local_dir, use_tx_freq=use_tx_freq,
+            use_geom=use_geom,
             use_tx_w=False,                       # w 只走收缩，不进 MLP
             freq_lo_hz=freq_lo_hz, freq_hi_hz=freq_hi_hz,
             init_u=init_u, n_bands=1, band_mix="single")

@@ -238,6 +238,15 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
         cam_intrinsics = read_intrinsics_text(cameras_intrinsic_file)
 
     reading_dir = "images" if images == None else images
+    # 若有显式划分文件，只打开被选中的相机（避免为未用视角准备图/句柄）
+    _tr = os.path.join(path, "train_index.txt"); _te = os.path.join(path, "test_index.txt")
+    if os.path.exists(_tr) and os.path.exists(_te):
+        keep = set()
+        for f in (_tr, _te):
+            for line in open(f):
+                keep.add(os.path.basename(line.strip()).split(".")[0])
+        cam_extrinsics = {k: v for k, v in cam_extrinsics.items()
+                          if os.path.basename(v.name).split(".")[0] in keep}
     cam_infos_unsorted = readColmapCameras(cam_extrinsics=cam_extrinsics, cam_intrinsics=cam_intrinsics, images_folder=os.path.join(path, reading_dir))
     cam_infos = sorted(cam_infos_unsorted.copy(), key = lambda x : x.image_name)
 

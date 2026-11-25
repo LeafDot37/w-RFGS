@@ -34,7 +34,7 @@ C(P×N) 的 rank-1 能量 = 1.0000，于是 c_{p,n} = α_n·g_p、折叠后只�
   而 `Z_n = Σ_m conj(x_n[m])·a_m` —— 这里对信道又取了一次共轭，两次相消后
   逐阵元因子落到 **exp(−j2π p_n·û)**。符号不能省：用 +j 时波束会照到镜像方向
   （û → −û），且这个错误不会在损失里显形为「学不动」，只会让 AF 张冠李戴。
-  自检见 `code/tools/_chk_af_sign.py`（峰值方向必须与 `direction_weight` 的 (θ,φ) 一致）。
+  自检见 `code/tools/archive/_chk_af_sign.py`（峰值方向必须与 `direction_weight` 的 (θ,φ) 一致）。
 - 阵元序与位置：`w_codebook.element_positions(nr, nc)`（y 慢轴升序、z 快轴降序），
   与 Sionna `PlanarArray.positions()` 同序。
 
@@ -107,7 +107,7 @@ class TxArrayFactorColorHead(TxScalarColorHead):
                  freq_lo_hz: float = 2.0e9, freq_hi_hz: float = 4.5e9,
                  init_u: float = 0.5, n_ant: int = 16,
                  norm: str = "mean", post_norm: str = "minmax",
-                 eps_norm: float = 1e-8):
+                 eps_norm: float = 1e-8, use_geom: bool = False):
         super().__init__(
             embed_dim=embed_dim, hidden=hidden, depth=depth,
             pe_xyz_L=pe_xyz_L, pe_dir_L=pe_dir_L, pe_rel_L=pe_rel_L,
@@ -123,6 +123,8 @@ class TxArrayFactorColorHead(TxScalarColorHead):
             raise ValueError(f"norm 须 ∈ {{'mean','minmax','none'}}，收到 {norm!r}")
         if post_norm not in ("minmax", "none"):
             raise ValueError(f"post_norm 须 ∈ {{'minmax','none'}}，收到 {post_norm!r}")
+        if use_geom:
+            raise ValueError("该头不支持 use_geom（几何块只接在基础/复值二次型头上）")
         self.head_type = HEAD_TYPE
         self.n_ant = n_ant
         self.norm = norm                 # 逐点尺度锚定：mean（默认）/ minmax / none

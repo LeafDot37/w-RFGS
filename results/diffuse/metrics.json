@@ -1,0 +1,53 @@
+{
+ "protocol": "diffuse channel, location-disjoint 48/16 split, six instances, 16 test views",
+ "methods": {
+  "SH_per_scene": {
+   "psnr": 10.968,
+   "ssim": 0.5518,
+   "lpips": 0.5768
+  },
+  "CORF_per_scene": {
+   "psnr": 10.048,
+   "ssim": 0.558,
+   "lpips": 0.5562
+  },
+  "constant_image_floor": {
+   "psnr": 11.219,
+   "ssim": 0.6552
+  },
+  "ours_zero_shot": {
+   "psnr": 11.868,
+   "ssim": 0.6791,
+   "lpips": 0.4445
+  },
+  "ours_finetune_3seed": {
+   "psnr": 12.231,
+   "psnr_std": 0.144,
+   "ssim": 0.6641,
+   "lpips": 0.4336,
+   "mvdr_psnr": 13.37,
+   "mvdr_std": 0.21,
+   "pdp": 0.41
+  }
+ },
+ "second_location_split": {
+  "SH": 10.111,
+  "CORF": 9.358,
+  "ours_zero_shot": 11.433,
+  "ours_finetune": 12.279,
+  "floor": 11.219
+ },
+ "sparse_adaptation_image_only": {
+  "K0": 12.065,
+  "K4": 12.493,
+  "K8": 12.104,
+  "K16": 12.307,
+  "K32": 12.729
+ },
+ "sparse_adaptation_with_cir": {
+  "K0": 12.065,
+  "K4": 12.194,
+  "K8": 12.389,
+  "K16": 12.638
+ }
+}

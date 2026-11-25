@@ -93,6 +93,7 @@ class TxScalarColorHead(nn.Module):
                  use_rx_dir: bool = False,
                  use_tx_orient: bool = False, use_tx_local_dir: bool = False,
                  use_tx_freq: bool = False, use_tx_w: bool = False,
+                 use_tx_w_complex: bool = False,
                  use_tx_w_diff: bool = False, use_geom: bool = False,
                  film: bool = False, film_pos: bool = False,
                  use_pos_embed: bool = False, n_pos: int = 0,
@@ -138,6 +139,7 @@ class TxScalarColorHead(nn.Module):
         self.use_tx_local_dir = bool(use_tx_local_dir)
         self.use_tx_freq = bool(use_tx_freq)
         self.use_tx_w = bool(use_tx_w)
+        self.use_tx_w_complex = bool(use_tx_w_complex)
         self.use_tx_w_diff = bool(use_tx_w_diff)
         # 高斯基元自身的几何：最小轴（≈表面法向）+ 它对两条射线的夹角 + 镜面平分线
         # 对齐度 + 各向异性。三轴尺度比中位数 32（smin 1.2 mm），法向是真实可用的信号，
@@ -193,11 +195,12 @@ class TxScalarColorHead(nn.Module):
         self.local_dir_dims = 3 if self.use_tx_local_dir else 0
         self.freq_dims = 1 if self.use_tx_freq else 0
         self.w_dims = 5 if self.use_tx_w else 0
+        self.w_complex_dims = 32 if self.use_tx_w_complex else 0
         # 波束差向量 2 维：Δv = u_y − sinθ_w·sinφ_w，Δw = u_z − cosθ_w。见模块头
         # 「波束差」说明；只在 use_tx_w 与 use_tx_local_dir 都打开时可用。
         self.w_diff_dims = 2 if self.use_tx_w_diff else 0
         self.param_dims = (self.orient_dims + self.local_dir_dims + self.freq_dims
-                           + self.w_dims + self.w_diff_dims)
+                           + self.w_dims + self.w_complex_dims + self.w_diff_dims)
         # 位置条件化：每个训练位置一行可学隐向量；第 n_pos 行是「未知位置」回退行。
         # 位置 id 由实例表的 `position_id` 给出，渲染端只对训练过的位置传 id，
         # 其余（位置留出组）一律走回退行 —— 否则读数会偷偷用上没训练过的随机行。
@@ -451,6 +454,15 @@ class TxScalarColorHead(nn.Module):
                 w0 = torch.cos(th)                      # cosθ_w
                 parts.append(torch.cat([s * (uloc[:, 1:2] - v0),
                                         s * (uloc[:, 2:3] - w0)], dim=1))
+        if self.w_complex_dims:
+            if tx_w is None:
+                raise ValueError("use_tx_w_complex=True 但未传入 tx_w（32 维 Re/Im）")
+            if not torch.is_tensor(tx_w):
+                tx_w = torch.tensor(tx_w, dtype=like.dtype, device=like.device)
+            tw = tx_w.reshape(-1).to(dtype=like.dtype, device=like.device)
+            if tw.numel() != 32:
+                raise ValueError(f"tx_w 复数输入须为 32 个数（16 个 Re/Im），收到 {tw.numel()}")
+            parts.append(tw.unsqueeze(0).expand(like.shape[0], 32))
         return torch.cat(parts, dim=1)
 
     def _pos_block(self, n: int, pos_id, xyz: torch.Tensor) -> torch.Tensor:
@@ -637,6 +649,11 @@ def compute_scalar_tx(head: TxScalarColorHead, embed: torch.Tensor,
         return compute_scalar_coh(head, embed, xyz, cam_center, spatial_lr_scale,
                                   tx, yaw=yaw, tx_yaw=tx_yaw, tx_pitch=tx_pitch,
                                   tx_freq=tx_freq, tx_rot=tx_rot, tx_w=tx_w)
+    if getattr(head, "head_type", "") == "scalar_jet_tx_bisg":
+        from splat.color_scalar_bisg import compute_scalar_bisg
+        return compute_scalar_bisg(head, embed, xyz, cam_center, spatial_lr_scale,
+                                   tx, yaw=yaw, tx_yaw=tx_yaw, tx_pitch=tx_pitch,
+                                   tx_freq=tx_freq, tx_rot=tx_rot, tx_w=tx_w)
     dirv = make_dir(xyz, cam_center)
     dist = _dist(xyz, cam_center, spatial_lr_scale) if head.use_dist else None
     return head(embed, dirv, xyz, dist, tx=tx, yaw=yaw,
@@ -683,8 +700,24 @@ def _base_head_cfg(head: TxScalarColorHead) -> dict:
         "use_tx_orient": head.use_tx_orient,
         "use_tx_local_dir": head.use_tx_local_dir,
         "use_tx_freq": head.use_tx_freq, "use_tx_w": head.use_tx_w,
+        "use_tx_w_complex": head.use_tx_w_complex,
         "use_tx_w_diff": head.use_tx_w_diff,
         "use_geom": head.use_geom,
+        "use_los": bool(getattr(head, "use_los", False)),
+        "los_param": (("log" if hasattr(head, "los_log") else "direct")
+                      if getattr(head, "use_los", False) else "direct"),
+        "los_kappa0": ([float(head.los_kappa0.real), float(head.los_kappa0.imag)]
+                       if hasattr(head, "los_kappa0") else None),
+        "use_rf_alpha": bool(hasattr(head, "rf_alpha")),
+        "rf_alpha_hidden": int(getattr(getattr(head, "rf_alpha", None), "hidden", 64)),
+        "rf_gx": int(getattr(getattr(head, "rf_alpha", None), "gx", 64)),
+        "rf_gy": int(getattr(getattr(head, "rf_alpha", None), "gy", 64)),
+        "rf_gz": int(getattr(getattr(head, "rf_alpha", None), "gz", 32)),
+        "rf_bias_init": float(getattr(getattr(head, "rf_alpha", None),
+                                      "bias_init", 0.0)),
+        "rf_use_amp": bool(getattr(head, "rf_use_amp", False)),
+        "use_diffuse": bool(hasattr(head, "diffuse")),
+        "diffuse_hidden": int(getattr(getattr(head, "diffuse", None), "hidden", 64)),
         "film": bool(getattr(head, "film", False)),
         "film_pos": bool(getattr(head, "film_pos", False)),
         "film_in": int(getattr(head, "film_in", 0)),
@@ -728,25 +761,62 @@ def tx_head_cfg(head: TxScalarColorHead, extra: dict | None = None) -> dict:
     if getattr(head, "head_type", "scalar_jet_tx") == "scalar_jet_tx_coh":
         from splat.color_scalar_coh import coh_head_cfg
         return coh_head_cfg(head, extra)
+    if getattr(head, "head_type", "scalar_jet_tx") == "scalar_jet_tx_bisg":
+        from splat.color_scalar_bisg import bisg_head_cfg
+        return bisg_head_cfg(head, extra)
     cfg = _base_head_cfg(head)
     if extra:
         cfg.update(extra)
     return cfg
 
 
+def _attach_los(head, cfg: dict):
+    return _attach_extra(head, cfg)
+
+
+def _attach_extra(head, cfg: dict):
+    if cfg.get("use_los"):
+        head.use_los = True
+        if cfg.get("los_param") == "log":
+            k0 = cfg.get("los_kappa0") or [1.0, 0.0]
+            head.los_kappa0 = complex(float(k0[0]), float(k0[1]))
+            head.los_log = nn.Parameter(torch.zeros(2))
+        else:
+            head.los_kappa = nn.Parameter(
+                torch.tensor(1.0 + 0.0j, dtype=torch.complex64))
+    if cfg.get("use_rf_alpha"):
+        from splat.rf_alpha import RfAlphaHead
+        head.rf_alpha = RfAlphaHead(
+            embed_dim=int(cfg.get("embed_dim", 32)),
+            hidden=int(cfg.get("rf_alpha_hidden", 64)),
+            gx=int(cfg.get("rf_gx", 64)), gy=int(cfg.get("rf_gy", 64)),
+            gz=int(cfg.get("rf_gz", 32)),
+            bias_init=float(cfg.get("rf_bias_init", 0.0)))
+        head.rf_use_amp = bool(cfg.get("rf_use_amp", False))
+    if cfg.get("use_diffuse"):
+        from splat.diffuse import DiffuseHead
+        head.use_diffuse = True
+        head.diffuse = DiffuseHead(embed_dim=int(cfg.get("embed_dim", 32)),
+                                   hidden=int(cfg.get("diffuse_hidden", 64)))
+    return head
+
+
 def head_from_cfg(cfg: dict) -> TxScalarColorHead:
     if cfg.get("head_type") == "scalar_jet_tx_cplx":
         from splat.color_scalar_tx_cplx import TxComplexColorHead
-        return TxComplexColorHead.from_cfg(cfg)
+        return _attach_extra(TxComplexColorHead.from_cfg(cfg), cfg)
     if cfg.get("head_type") == "scalar_jet_tx_fold":
         from splat.color_scalar_tx_fold import TxFoldColorHead
-        return TxFoldColorHead.from_cfg(cfg)
+        return _attach_extra(TxFoldColorHead.from_cfg(cfg), cfg)
     if cfg.get("head_type") == "scalar_jet_tx_af":
         from splat.color_scalar_af import TxArrayFactorColorHead
-        return TxArrayFactorColorHead.from_cfg(cfg)
+        return _attach_extra(TxArrayFactorColorHead.from_cfg(cfg), cfg)
     if cfg.get("head_type") == "scalar_jet_tx_coh":
         from splat.color_scalar_coh import TxCoherentColorHead
-        return TxCoherentColorHead.from_cfg(cfg)
+        return _attach_extra(TxCoherentColorHead.from_cfg(cfg), cfg)
+    if cfg.get("head_type") == "scalar_jet_tx_bisg":
+        from splat.color_scalar_bisg import TxBiSGColorHead
+        return _attach_extra(TxBiSGColorHead.from_cfg(cfg), cfg)
     h = TxScalarColorHead(
         embed_dim=cfg["embed_dim"], hidden=cfg["mlp_hidden"], depth=cfg["mlp_depth"],
         pe_xyz_L=cfg["pe_xyz_L"], pe_dir_L=cfg["pe_dir_L"],
@@ -758,6 +828,7 @@ def head_from_cfg(cfg: dict) -> TxScalarColorHead:
         use_tx_local_dir=cfg.get("use_tx_local_dir", False),
         use_tx_freq=cfg.get("use_tx_freq", False),
         use_tx_w=cfg.get("use_tx_w", False),
+        use_tx_w_complex=cfg.get("use_tx_w_complex", False),
         use_tx_w_diff=cfg.get("use_tx_w_diff", False),
         use_geom=cfg.get("use_geom", False),
         film=cfg.get("film", False),
@@ -773,7 +844,7 @@ def head_from_cfg(cfg: dict) -> TxScalarColorHead:
         band_mix=cfg.get("band_mix", "single"))
     h.xyz_center = None if cfg.get("xyz_center") is None else tuple(cfg["xyz_center"])
     h.xyz_scale = float(cfg.get("xyz_scale", 0.0))
-    return h
+    return _attach_los(h, cfg)
 
 
 def save_tx_state(path: str, head: TxScalarColorHead, embed: torch.Tensor,

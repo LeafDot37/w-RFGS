@@ -3,7 +3,7 @@
 360x90 空间谱（与 GRaF 的定义一致：每个方向 = 一个波束的输出功率）。
 
 跑法（独立环境）：
-    python code/sim/sionna_smoke.py
+    /home/leafd_dot/miniforge3/envs/sionna/bin/python code/sim/sionna_smoke.py
 """
 from __future__ import annotations
 
