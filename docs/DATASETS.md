@@ -75,14 +75,22 @@ the files. Do not mix the two domains when comparing numbers.
 > resolve, regenerate the data instead (§3) — the generation path is fully scripted and does not
 > depend on any link.
 
+Primary source (Hugging Face):
+
 ```
-Release page:  https://github.com/LeafDot37/w-RFGS/releases/tag/datasets-v1
-Assets:        wrfgs_cbf_params.tar.zst.part-00 … part-NN
-               wrfgs_mvdr_w_params.tar.zst.part-00 … part-NN
-               wrfgs_diffuse_subset.tar.zst.part-00 … part-NN
-               wrfgs_cir_train.tar.zst.part-00 … part-NN
-               SHA256SUMS.txt
+https://huggingface.co/datasets/LeafDot37/w-RFGS
 ```
+
+| Archive | Contents | Size |
+|---|---|---|
+| `wrfgs_dataset` | base RF-3DGS release: optical images, trained optical Gaussians, 3,200 poses, released RRF | 583 MB |
+| `wrfgs_mvdr_w_params` | beamforming-weight benchmark, regularized MVDR, 354 instances × 640 views | 2.2 GB |
+| `wrfgs_cbf_w_params` | the same 354 instances under conventional beamforming | 2.5 GB |
+| `wrfgs_diffuse_subset` | 60-instance diffuse channel, 64 views + complex CIR per instance | 463 MB |
+| `wrfgs__cir_train` | complex CIR labels for the 144 training instances | 607 MB |
+
+Each archive is split into parts of ≤1.9 GB. `SHA256SUMS.txt` and `MANIFEST.txt` are in the
+Hugging Face repository and also tracked in `datasets_meta/release/`.
 
 Download every part of an archive into a single directory, then:
 
@@ -203,3 +211,30 @@ python code/sim/gen_cbf_params.py \
 
 `wrfgs_cir_train` contains the same `--export_cir` output for the 144 training instances and is
 what `train_csi_cbf.py --cir_root` reads (one `cir.npz` per instance, key `v<view>_h`).
+
+### Instance table and roles (w benchmark)
+
+`datasets_meta/mvdr_w_params/instances.json` stores, per instance: `id`, `xyz` (transmitter
+position, m), `yaw_abs_rad`, `pitch_abs_rad`, `freq_hz`, `w_label`, `role`, `views`, `label`.
+
+| Role | Count | Meaning |
+|---|---|---|
+| `train` | 144 | training configurations |
+| `pos_holdout` | 52 | unseen positions |
+| `yaw_holdout` / `pitch_holdout` / `freq_holdout` | 36 each | unseen orientation / carrier |
+| `double_holdout` | 13 | unseen position + carrier |
+| `w_holdout` | 36 | unseen beamforming weights |
+| `orig` | 1 | original RF-3DGS transmitter |
+
+`wrfgs_cbf_w_params` and `wrfgs_mvdr_w_params` share the same 354 instances and 640 views, so
+CBF and MVDR can be paired instance by instance.
+
+### Complex CIR files
+
+- `_cir_train/instXXX.npz`: `v<view>_a` (complex path amplitudes), `v<view>_tau` (ns),
+  `v<view>_valid` (bool), and `views` (640 entries).
+- `RF-3DGS_diffuse_subset/instXXX/cir.npz`: `v<view>_h`, a complex `[100, T]` channel on a
+  0.5 ns grid, plus `views` (64 entries).
+
+The diffuse subset contains 60 instances (the 24 training ids plus the 36 held-out ids used
+by the diffuse study), each with 64 views — the first 64 author-test views.

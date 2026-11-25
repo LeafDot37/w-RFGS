@@ -38,8 +38,11 @@ analytic renderer.
 
 ## Data
 
-The spectra are several GB and are distributed as checksummed archives (GitHub Releases /
-cloud drive), not in git:
+The spectra are several GB and are distributed as checksummed archives on Hugging Face:
+
+**https://huggingface.co/datasets/LeafDot37/w-RFGS**
+
+Archive names and SHA-256 sums are also tracked in `datasets_meta/release/`.
 
 - `wrfgs_cbf_params` — single-transmitter benchmark, CBF
 - `wrfgs_mvdr_w_params` — beamforming-weight benchmark, MVDR (the main table)
