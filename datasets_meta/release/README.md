@@ -10,6 +10,8 @@ the generated spectra. The manifest and per-part SHA-256 sums are in this direct
 | `wrfgs_cbf_w_params` | same instances, CBF operator | 2 | 2.5 GB |
 | `wrfgs_diffuse_subset` | 60-instance diffuse subset, 64 views + complex CIR per instance | 1 | 463 MB |
 | `wrfgs__cir_train` | complex CIR labels for the 144 training instances | 1 | 607 MB |
+| `wrfgs__cir_axis` | complex CIR labels for the 174 axis-holdout instances | 1 | 83 MB |
+| `wrfgs__cir_w` | complex CIR labels for the 36 weight-holdout instances | 1 | 113 MB |
 
 Restore into the repository:
 

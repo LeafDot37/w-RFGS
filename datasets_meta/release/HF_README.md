@@ -30,6 +30,8 @@ against a jet RGB render — they differ by 2–3 dB.
 | `wrfgs_cbf_w_params.tar.gz` | the **same instances under conventional beamforming (CBF)** | 354 × 640 | 226,560 |
 | `wrfgs_diffuse_subset.tar.gz` | **diffuse channel** (diffuse + diffraction), 64 views per instance, plus complex CIR per instance | 60 × 64 | 3,840 |
 | `wrfgs__cir_train.tar.gz` | complex CIR labels for the **144 training instances** | 144 × 640 views | 144 npz |
+| `wrfgs__cir_axis.tar.gz` | complex CIR labels for the **174 axis-holdout instances** | 174 × 640 views | 174 npz |
+| `wrfgs__cir_w.tar.gz` | complex CIR labels for the **36 weight-holdout instances** | 36 × 640 views | 36 npz |
 
 All archives are split into parts of ≤1.9 GB. Checksums: `SHA256SUMS.txt`; per-archive
 counts and byte sizes: `MANIFEST.txt`.
@@ -54,8 +56,10 @@ datasets/
 │   └── spectra/inst000 … inst353/
 ├── RF-3DGS_diffuse_subset/
 │   └── inst000 … inst059/           # 64 PNG + cir.npz each
-└── _cir_train/
-    └── inst000.npz … inst143.npz    # keys v<view>_a, v<view>_tau, v<view>_valid
+├── _cir_train/                      # 144 training instances
+│   └── inst000.npz … inst143.npz    # keys v<view>_a, v<view>_tau, v<view>_valid
+├── _cir_axis/                       # 174 axis-holdout instances
+└── _cir_w/                          # 36 weight-holdout instances
 ```
 
 ## Instance table
@@ -77,6 +81,7 @@ operators can be compared instance by instance.
 
 ## Complex CIR
 
+- CIR labels for all 354 instances: `_cir_train` (144), `_cir_axis` (174), `_cir_w` (36); the three files use the same keys.
 - Training labels (`_cir_train/instXXX.npz`): `v<view>_a` (complex amplitudes),
   `v<view>_tau` (ns), `v<view>_valid` (bool), plus `views`.
 - Diffuse subset (`instXXX/cir.npz`): `v<view>_h`, a complex `[100, T]` channel on a 0.5 ns

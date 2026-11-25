@@ -88,6 +88,8 @@ https://huggingface.co/datasets/LeafDot37/w-RFGS
 | `wrfgs_cbf_w_params` | the same 354 instances under conventional beamforming | 2.5 GB |
 | `wrfgs_diffuse_subset` | 60-instance diffuse channel, 64 views + complex CIR per instance | 463 MB |
 | `wrfgs__cir_train` | complex CIR labels for the 144 training instances | 607 MB |
+| `wrfgs__cir_axis` | complex CIR labels for the 174 axis-holdout instances | 83 MB |
+| `wrfgs__cir_w` | complex CIR labels for the 36 weight-holdout instances | 113 MB |
 
 Each archive is split into parts of ≤1.9 GB. `SHA256SUMS.txt` and `MANIFEST.txt` are in the
 Hugging Face repository and also tracked in `datasets_meta/release/`.
@@ -231,7 +233,7 @@ CBF and MVDR can be paired instance by instance.
 
 ### Complex CIR files
 
-- `_cir_train/instXXX.npz`: `v<view>_a` (complex path amplitudes), `v<view>_tau` (ns),
+- `_cir_train/instXXX.npz` (144), `_cir_axis/instXXX.npz` (174), `_cir_w/instXXX.npz` (36): all 354 instances, with `v<view>_a` (complex path amplitudes), `v<view>_tau` (ns),
   `v<view>_valid` (bool), and `views` (640 entries).
 - `RF-3DGS_diffuse_subset/instXXX/cir.npz`: `v<view>_h`, a complex `[100, T]` channel on a
   0.5 ns grid, plus `views` (64 entries).
