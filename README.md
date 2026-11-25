@@ -32,7 +32,7 @@ conda create -n wrfgs python=3.10 -y && conda activate wrfgs
 pip install -r requirements.txt
 ```
 
-`torch` with CUDA is required. The Gaussian *rasteriser* (diff-gaussian-rasterization /
+`torch` with CUDA is required. See [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) for the exact WSL/conda and server environments used to verify this code. The Gaussian *rasteriser* (diff-gaussian-rasterization /
 simple-knn) is only needed for the per-scene SH/CORF baselines; the main pipeline uses the
 analytic renderer.
 
