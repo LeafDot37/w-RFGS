@@ -64,7 +64,7 @@ Useful flags: `--per-axis 6`, `--views 64`, `--checkpoint <ckpt>` to skip traini
 
 ## Headline results
 
-Per-axis CBF (six held-out instances per axis, 64 views each); LPIPS is the primary metric.
+Per-axis CBF over all held-out instances (52/36/36/36/13/36), 64 views each; LPIPS is the primary metric.
 Full numbers and figures are in [`results/main_cross_tx/`](results/main_cross_tx/).
 
 | Axis | PSNR↑ | SSIM↑ | LPIPS↓ |
