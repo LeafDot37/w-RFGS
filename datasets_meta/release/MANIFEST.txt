@@ -1,0 +1,6 @@
+# generated 2026-11-25 13:56:09
+RF-3DGS_dataset	files=6	images=0	instance_dirs=0
+RF-3DGS_mvdr_w_params	files=226916	images=226560	instance_dirs=354
+RF-3DGS_cbf_w_params	files=226914	images=226560	instance_dirs=354
+RF-3DGS_diffuse_subset	files=3960	images=3840	instance_dirs=60
+_cir_train	files=144	images=0	instance_dirs=0
